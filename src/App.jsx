@@ -37,6 +37,7 @@ const Main = () => {
         <li>Eminem</li>
         <li>Ice Cube</li>
         <li>50 Cent</li>
+        <li>Slick Rick</li>
       </ul>
     </main>
   )
