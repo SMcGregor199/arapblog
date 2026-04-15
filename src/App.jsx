@@ -40,6 +40,7 @@ const Main = () => {
         <li>50 Cent</li>
         <li>Slick Rick</li>
         <li>Outkast</li>
+        <li>DMX</li>
       </ul>
     </main>
   )
