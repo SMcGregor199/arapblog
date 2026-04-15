@@ -25,13 +25,10 @@ const Main = () => {
       </section>
       <br />
       <span></span>
-<<<<<<< Updated upstream
-      <ul></ul>
-=======
-      <ul>
+      <ul>        
         <li>Lupe Fiasco</li>
         <li>Kendrick Lamar</li>
->>>>>>> Stashed changes
+      </ul>
     </main>
   )
 }
