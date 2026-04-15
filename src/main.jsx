@@ -15,5 +15,8 @@ const Footer = () => {
   )
 }
 root.render(
-  <Main />
+  <>
+    <Main />
+    <Footer/>
+  </>
 )
