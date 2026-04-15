@@ -35,6 +35,7 @@ const Main = () => {
         <li>Lil Wayne</li>
         <li>Biggie</li>
         <li>Eminem</li>
+        <li>Ice Cube</li>
       </ul>
     </main>
   )
