@@ -41,6 +41,7 @@ const Main = () => {
         <li>Slick Rick</li>
         <li>Outkast</li>
         <li>DMX</li>
+        <li>Method Man</li>
       </ul>
     </main>
   )
