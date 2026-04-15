@@ -25,7 +25,7 @@ const Main = () => {
       </section>
       <br />
       <span></span>
-      <ul></>
+      <ul></ul>
     </main>
   )
 }
