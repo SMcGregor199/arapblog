@@ -32,6 +32,7 @@ const Main = () => {
         <li>Drake</li>
         <li>Travis Scott</li>
         <li>Future</li>
+        <li>Lil Wayne</li>
       </ul>
     </main>
   )
