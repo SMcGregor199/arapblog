@@ -39,6 +39,7 @@ const Main = () => {
         <li>Ice Cube</li>
         <li>50 Cent</li>
         <li>Slick Rick</li>
+        <li>Outkast</li>
       </ul>
     </main>
   )
