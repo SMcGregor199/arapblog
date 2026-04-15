@@ -1,5 +1,18 @@
 import {createRoot} from "react-dom/client";
 const root = createRoot(document.querySelector("#root"));
+const Header = () => {
+  return (
+    <header>
+      <nav>
+        <ul>
+        <li>
+        <a href="#">Home</a>
+        </li>
+        </ul>
+      </nav>
+    </header>
+  )
+}
 const Main = () => {
   return (
     <main>
