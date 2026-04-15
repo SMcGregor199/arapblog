@@ -29,6 +29,7 @@ const Footer = () => {
 }
 root.render(
   <>
+    <Header />
     <Main />
     <Footer/>
   </>
