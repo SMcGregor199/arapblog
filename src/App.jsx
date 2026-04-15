@@ -17,6 +17,11 @@ const Main = () => {
     <main>
      <ReactSVG />
       <h1>Welcome to {import.meta.env.VITE_WEBSITE_NAME} from the App file</h1>
+      <section>
+        <h2>Section 1</h2>
+        <p>This is section 1</p>
+        <p>This is some paragraph text about the rapper Nas</p>
+      </section>
     </main>
   )
 }
