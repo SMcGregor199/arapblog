@@ -31,6 +31,7 @@ const Main = () => {
         <li>J. Cole</li>
         <li>Drake</li>
         <li>Travis Scott</li>
+        <li>Future</li>
       </ul>
     </main>
   )
