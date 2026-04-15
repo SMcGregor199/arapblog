@@ -28,6 +28,7 @@ const Main = () => {
       <ul>        
         <li>Lupe Fiasco</li>
         <li>Kendrick Lamar</li>
+        <li>J. Cole</li>
       </ul>
     </main>
   )
