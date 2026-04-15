@@ -23,11 +23,9 @@ const Main = () => {
         <p>This is some paragraph text about the rapper Nas</p>
         <img src="./assets/nas.jpg" alt="Nas" />  
       </section>
-<<<<<<< Updated upstream
       <br />
-=======
       <span></span>
->>>>>>> Stashed changes
+      <ul></>
     </main>
   )
 }
