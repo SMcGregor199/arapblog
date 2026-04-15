@@ -21,6 +21,7 @@ const Main = () => {
         <h2>Section 1</h2>
         <p>This is section 1</p>
         <p>This is some paragraph text about the rapper Nas</p>
+        <img src="./assets/nas.jpg" alt="Nas" />  
       </section>
     </main>
   )
