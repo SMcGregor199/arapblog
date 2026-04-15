@@ -7,6 +7,13 @@ const Main = () => {
     </main>
   )
 }
+const Footer = () => {
+  return (
+    <footer>
+      <p>Copyright {new Date().getFullYear()}</p>
+    </footer>
+  )
+}
 root.render(
   <Main />
 )
