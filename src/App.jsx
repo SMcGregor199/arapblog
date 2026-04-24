@@ -42,6 +42,7 @@ const Main = () => {
         <li>Outkast</li>
         <li>DMX</li>
         <li>Method Man</li>
+        <li>Ghostface Killah</li>
       </ul>
     </main>
   )
