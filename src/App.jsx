@@ -44,6 +44,7 @@ const Main = () => {
         <li>Method Man</li>
         <li>Ghostface Killah</li>
         <li>Kanye West</li>
+        <li>Chance the Rapper</li>
       </ul>
     </main>
   )
