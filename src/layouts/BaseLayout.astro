@@ -25,8 +25,6 @@ const {
 const pageTitle = title ? `${title} — ${site.name}` : `${site.name} — Find your way back into rap`;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 const socialImage = new URL(image, Astro.site);
-const umamiWebsiteId = import.meta.env.PUBLIC_UMAMI_WEBSITE_ID;
-const umamiScriptUrl = import.meta.env.PUBLIC_UMAMI_SCRIPT_URL || "https://cloud.umami.is/script.js";
 ---
 
 <!doctype html>
@@ -58,17 +56,16 @@ const umamiScriptUrl = import.meta.env.PUBLIC_UMAMI_SCRIPT_URL || "https://cloud
     {publishedAt && <meta property="article:published_time" content={publishedAt.toISOString()} />}
     {updatedAt && <meta property="article:modified_time" content={updatedAt.toISOString()} />}
     <title>{pageTitle}</title>
-    {
-      umamiWebsiteId && (
-        <script
-          is:inline
-          defer
-          src={umamiScriptUrl}
-          data-website-id={umamiWebsiteId}
-          data-domains="arapblog.com,www.arapblog.com"
-        />
-      )
-    }
+    <script
+      is:inline
+      defer
+      src="https://cloud.umami.is/script.js"
+      data-website-id="37f468f1-9bb9-4763-99c8-0e974a9b03fe"
+      data-domains="arapblog.com,www.arapblog.com"
+      data-do-not-track="true"
+      data-exclude-search="true"
+      data-performance="true"
+    ></script>
     <slot name="head" />
   </head>
   <body>
