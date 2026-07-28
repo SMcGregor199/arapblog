@@ -1,0 +1,54 @@
+---
+import { site } from "../data/site";
+---
+
+<aside class="support-card" aria-labelledby="support-heading">
+  <div>
+    <p class="kicker">Keep the record spinning</p>
+    <h2 id="support-heading">Was this path useful?</h2>
+    <p>
+      A small contribution helps cover the domain and keeps these guides independent.
+    </p>
+  </div>
+  {
+    <a
+      class="button button--light"
+      href={site.supportUrl}
+      rel="external nofollow sponsored"
+      data-umami-event="Buy Me a Coffee click"
+    >
+      Buy me a coffee
+    </a>
+  }
+</aside>
+
+<style>
+  .support-card {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 2rem;
+    margin-top: 4rem;
+    padding: 2rem;
+    background: var(--violet);
+    color: var(--paper);
+    box-shadow: 7px 7px 0 var(--ink);
+  }
+
+  h2 {
+    margin-top: 0.55rem;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+  }
+
+  p:not(.kicker) {
+    max-width: 46ch;
+    margin-top: 0.7rem;
+    color: rgba(243, 239, 229, 0.78);
+  }
+
+  @media (max-width: 680px) {
+    .support-card {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

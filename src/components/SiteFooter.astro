@@ -1,0 +1,29 @@
+---
+import { site } from "../data/site";
+---
+
+<footer class="site-footer">
+  <div class="shell">
+    <div class="footer-grid">
+      <div>
+        <a class="brand" href="/">
+          <span class="brand-mark" aria-hidden="true">Record</span>
+          <span>{site.name}</span>
+        </a>
+        <p class="footer-note">
+          Listening paths for rap fans who missed a few exits and are ready to find their way back.
+        </p>
+      </div>
+      <nav class="footer-links" aria-label="Footer navigation">
+        <a href="/articles">Articles</a>
+        <a href="/about">About</a>
+        <a href="/newsletter">Newsletter</a>
+        <a href="/affiliate-disclosure">Affiliate disclosure</a>
+        <a href="/privacy">Privacy</a>
+      </nav>
+    </div>
+    <p class="copyright">
+      © {new Date().getFullYear()} {site.name}. Recommendations are editorially independent.
+    </p>
+  </div>
+</footer>

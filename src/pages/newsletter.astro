@@ -1,0 +1,134 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+const kitFormAction = import.meta.env.PUBLIC_KIT_FORM_ACTION;
+---
+
+<BaseLayout
+  title="Newsletter"
+  description="Join the monthly A Rap Blog newsletter for one new listening path and a few worthwhile detours."
+>
+  <header class="page-hero">
+    <div class="shell">
+      <p class="eyebrow">One note a month</p>
+      <h1>A smaller inbox. A better queue.</h1>
+      <p>
+        Get the newest listening path, a few records worth your time, and one thoughtful detour.
+        No daily churn and no release-week panic.
+      </p>
+    </div>
+  </header>
+  <section class="content-section">
+    <div class="shell signup-grid">
+      <div class="signup-panel">
+        <p class="kicker">Join the first issue</p>
+        {
+          kitFormAction ? (
+            <form class="signup-form" action={kitFormAction} method="post">
+              <label for="email">Email address</label>
+              <input id="email" name="email_address" type="email" autocomplete="email" required />
+              <button class="button" type="submit" data-umami-event="Newsletter signup page">
+                Join the list
+              </button>
+            </form>
+          ) : (
+            <div class="status-note">
+              The newsletter opens after the second listening path. The site is ready for a Kit
+              form action through <code>PUBLIC_KIT_FORM_ACTION</code>.
+            </div>
+          )
+        }
+        <p class="privacy-note">
+          Subscriptions use double opt-in. Every issue includes an unsubscribe link. Read the
+          <a href="/privacy">privacy policy</a>.
+        </p>
+      </div>
+      <div class="issue-preview" aria-label="Preview of the monthly newsletter">
+        <p class="kicker">Inside each issue</p>
+        <ol>
+          <li><span>One</span> new listening path</li>
+          <li><span>Three</span> quick recommendations</li>
+          <li><span>Zero</span> algorithm panic</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .signup-grid {
+    display: grid;
+    grid-template-columns: 1fr 0.8fr;
+    gap: clamp(2rem, 7vw, 6rem);
+    align-items: start;
+  }
+
+  .signup-panel,
+  .issue-preview {
+    padding: clamp(1.5rem, 4vw, 3rem);
+    border: 1px solid var(--line-strong);
+    background: var(--panel);
+  }
+
+  .signup-panel {
+    box-shadow: 8px 8px 0 var(--clay);
+  }
+
+  .signup-form {
+    display: grid;
+    gap: 0.7rem;
+    margin-top: 1.2rem;
+  }
+
+  .signup-form label {
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .signup-form input {
+    min-height: 50px;
+    padding: 0.8rem;
+    border: 1px solid var(--ink);
+    background: var(--paper);
+  }
+
+  .privacy-note {
+    margin-top: 1.4rem;
+    color: var(--ink-soft);
+    font-size: 0.8rem;
+  }
+
+  .issue-preview {
+    background: var(--lime);
+  }
+
+  .issue-preview ol {
+    padding: 0;
+    margin-top: 1.5rem;
+    list-style: none;
+  }
+
+  .issue-preview li {
+    padding-block: 1.2rem;
+    border-top: 1px solid var(--line-strong);
+    font-family: var(--serif);
+    font-size: 1.4rem;
+  }
+
+  .issue-preview li span {
+    display: inline-block;
+    width: 4rem;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  @media (max-width: 760px) {
+    .signup-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

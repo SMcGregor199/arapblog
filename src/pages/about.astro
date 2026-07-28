@@ -1,0 +1,68 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { site } from "../data/site";
+---
+
+<BaseLayout
+  title="About"
+  description="Why A Rap Blog exists, how its recommendations work, and the standards behind every listening path."
+>
+  <header class="page-hero">
+    <div class="shell">
+      <p class="eyebrow">About the publication</p>
+      <h1>You are not late. You just need a route.</h1>
+      <p>
+        {site.name} is for people who still love rap but no longer know where to begin. It replaces
+        the infinite feed with a small number of argued, sequenced recommendations.
+      </p>
+    </div>
+  </header>
+  <section class="content-section">
+    <div class="shell">
+      <div class="info-grid">
+        <article class="info-card">
+          <p class="kicker">01 / Point of view</p>
+          <h2>A guide, not a database</h2>
+          <p>
+            These articles make choices. They explain why one record follows another rather than
+            pretending every option is equally useful.
+          </p>
+        </article>
+        <article class="info-card">
+          <p class="kicker">02 / Experience</p>
+          <h2>Honest about the source</h2>
+          <p>
+            Personal listening is presented as opinion. Historical and factual claims are sourced.
+            Products not personally owned are never described as tested.
+          </p>
+        </article>
+        <article class="info-card">
+          <p class="kicker">03 / Independence</p>
+          <h2>Recommendations come first</h2>
+          <p>
+            Commercial relationships are disclosed before monetized links. A commission never buys
+            a place on a listening path.
+          </p>
+        </article>
+      </div>
+      <div class="legal-copy author-note">
+        <h2>Who is vestige?</h2>
+        <p>
+          vestige is the pen name behind A Rap Blog: a longtime listener writing for people
+          who recognize the feeling of loving the music while falling behind its pace. The name
+          keeps the focus on the route rather than the résumé.
+        </p>
+        <p>
+          Questions, corrections, or a path you want mapped? Email
+          <a href={`mailto:${site.email}`}>{site.email}</a>.
+        </p>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .author-note {
+    margin-top: 5rem;
+  }
+</style>

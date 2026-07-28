@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#f3efe5"/>
+  <path d="M0 0h1200v18H0z" fill="#c94e37"/>
+  <circle cx="932" cy="315" r="228" fill="#7161a8" stroke="#17130f" stroke-width="4"/>
+  <g fill="none" stroke="#17130f" stroke-opacity=".48" stroke-width="3">
+    <circle cx="932" cy="315" r="195"/>
+    <circle cx="932" cy="315" r="160"/>
+    <circle cx="932" cy="315" r="125"/>
+    <circle cx="932" cy="315" r="90"/>
+  </g>
+  <circle cx="932" cy="315" r="36" fill="#c9ee58" stroke="#17130f" stroke-width="4"/>
+  <circle cx="932" cy="315" r="9" fill="#17130f"/>
+  <text x="80" y="115" fill="#17130f" font-family="Arial, sans-serif" font-size="26" font-weight="700" letter-spacing="5">A RAP BLOG</text>
+  <text x="80" y="255" fill="#17130f" font-family="Georgia, serif" font-size="82" font-weight="700">Find your way</text>
+  <text x="80" y="350" fill="#c94e37" font-family="Georgia, serif" font-size="82" font-style="italic">back into rap.</text>
+  <text x="80" y="452" fill="#50483f" font-family="Arial, sans-serif" font-size="28">Opinionated listening paths for returning fans.</text>
+  <path d="M80 520h550" stroke="#17130f" stroke-width="3"/>
+  <circle cx="80" cy="520" r="9" fill="#c9ee58" stroke="#17130f" stroke-width="3"/>
+  <circle cx="355" cy="520" r="9" fill="#c9ee58" stroke="#17130f" stroke-width="3"/>
+  <circle cx="630" cy="520" r="9" fill="#c9ee58" stroke="#17130f" stroke-width="3"/>
+</svg>

@@ -1,0 +1,39 @@
+---
+const kitFormAction = import.meta.env.PUBLIC_KIT_FORM_ACTION;
+---
+
+<section class="newsletter-band" aria-labelledby="newsletter-heading">
+  <div class="shell newsletter-inner">
+    <div>
+      <p class="kicker">One thoughtful note a month</p>
+      <h2 id="newsletter-heading">Stay on the listening path.</h2>
+    </div>
+    <div>
+      <p>
+        A new guide, a few records worth your time, and one detour you might have missed. No
+        release-day treadmill.
+      </p>
+      {
+        kitFormAction ? (
+          <form class="newsletter-form" action={kitFormAction} method="post">
+            <label class="sr-only" for="newsletter-email">Email address</label>
+            <input
+              id="newsletter-email"
+              name="email_address"
+              type="email"
+              autocomplete="email"
+              placeholder="you@example.com"
+              required
+            />
+            <button class="button button--light" type="submit" data-umami-event="Newsletter signup">
+              Join the list
+            </button>
+          </form>
+        ) : (
+          <a class="button button--light" href="/newsletter">See what is coming</a>
+        )
+      }
+      <p class="form-note">Monthly at most. Unsubscribe whenever you want.</p>
+    </div>
+  </div>
+</section>

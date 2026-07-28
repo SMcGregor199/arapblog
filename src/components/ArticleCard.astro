@@ -1,0 +1,35 @@
+---
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+  article: CollectionEntry<"articles">;
+}
+
+const { article } = Astro.props;
+const date = article.data.publishedAt.toLocaleDateString("en-US", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+  timeZone: "UTC",
+});
+---
+
+<article class="article-card">
+  <a
+    class="card-art"
+    data-accent={article.data.accent}
+    href={`/articles/${article.id}`}
+    aria-label={`Read ${article.data.title}`}
+  >
+    <span>{article.data.heroLabel}</span>
+  </a>
+  <div class="card-body">
+    <div class="card-meta">
+      <span>{article.data.contentType}</span>
+      <time datetime={article.data.publishedAt.toISOString()}>{date}</time>
+    </div>
+    <h3><a href={`/articles/${article.id}`}>{article.data.title}</a></h3>
+    <p>{article.data.description}</p>
+    <a class="card-link" href={`/articles/${article.id}`}>Follow this path</a>
+  </div>
+</article>
