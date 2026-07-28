@@ -1,0 +1,32 @@
+---
+import { getCollection } from "astro:content";
+import ArticleCard from "../../components/ArticleCard.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+const articles = (await getCollection("articles", ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf(),
+);
+---
+
+<BaseLayout
+  title="Listening paths"
+  description="Every A Rap Blog listening path, artist guide, and reading recommendation."
+>
+  <header class="page-hero">
+    <div class="shell">
+      <p class="eyebrow">The full stack</p>
+      <h1>Every listening path.</h1>
+      <p>
+        Begin with what you know, choose the connection that interests you, and stop when your
+        queue feels alive again.
+      </p>
+    </div>
+  </header>
+  <section class="content-section">
+    <div class="shell">
+      <div class="card-grid">
+        {articles.map((article) => <ArticleCard article={article} />)}
+      </div>
+    </div>
+  </section>
+</BaseLayout>
