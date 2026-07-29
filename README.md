@@ -49,12 +49,13 @@ The site name, pen name, contact email, support URL, and primary description liv
 Copy `.env.example` to `.env` for local testing. Configure the same public values in Netlify:
 
 - `PUBLIC_KIT_FORM_ACTION` — the Kit embed form action.
-- `PUBLIC_UMAMI_WEBSITE_ID` — the Umami Cloud website ID.
-- `PUBLIC_UMAMI_SCRIPT_URL` — optional override for the Umami script.
 - `PUBLIC_BOOKSHOP_STORE_URL` — the approved Bookshop.org affiliate storefront URL.
 
 No credential or secret is required in the browser. Leave a value blank until that service is
 ready; the site renders an honest pre-launch state instead of a broken form or invented link.
+
+Umami Cloud analytics is configured directly in `src/layouts/BaseLayout.astro`. Its website ID is
+public configuration, and tracking is restricted to the production domains.
 
 ## Netlify
 
