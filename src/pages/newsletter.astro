@@ -1,7 +1,6 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-
-const kitFormAction = import.meta.env.PUBLIC_KIT_FORM_ACTION;
+import { site } from "../data/site";
 ---
 
 <BaseLayout
@@ -23,8 +22,8 @@ const kitFormAction = import.meta.env.PUBLIC_KIT_FORM_ACTION;
       <div class="signup-panel">
         <p class="kicker">Join the first issue</p>
         {
-          kitFormAction ? (
-            <form class="signup-form" action={kitFormAction} method="post">
+          site.newsletterFormAction ? (
+            <form class="signup-form" action={site.newsletterFormAction} method="post">
               <label for="email">Email address</label>
               <input id="email" name="email_address" type="email" autocomplete="email" required />
               <button class="button" type="submit" data-umami-event="Newsletter signup page">
@@ -33,8 +32,7 @@ const kitFormAction = import.meta.env.PUBLIC_KIT_FORM_ACTION;
             </form>
           ) : (
             <div class="status-note">
-              The newsletter opens after the second listening path. The site is ready for a Kit
-              form action through <code>PUBLIC_KIT_FORM_ACTION</code>.
+              The newsletter opens after the second listening path.
             </div>
           )
         }
