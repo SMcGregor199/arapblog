@@ -8,6 +8,7 @@ export const site = {
   author: "vestige",
   email: "vestige@arapblog.com",
   supportUrl: "https://buymeacoffee.com/arapblog",
+  newsletterFormAction: "https://app.kit.com/forms/9741486/subscriptions",
 };
 
 export const navigation = [
