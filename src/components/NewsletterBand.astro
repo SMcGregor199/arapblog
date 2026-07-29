@@ -1,5 +1,5 @@
 ---
-const kitFormAction = import.meta.env.PUBLIC_KIT_FORM_ACTION;
+import { site } from "../data/site";
 ---
 
 <section class="newsletter-band" aria-labelledby="newsletter-heading">
@@ -14,8 +14,8 @@ const kitFormAction = import.meta.env.PUBLIC_KIT_FORM_ACTION;
         release-day treadmill.
       </p>
       {
-        kitFormAction ? (
-          <form class="newsletter-form" action={kitFormAction} method="post">
+        site.newsletterFormAction ? (
+          <form class="newsletter-form" action={site.newsletterFormAction} method="post">
             <label class="sr-only" for="newsletter-email">Email address</label>
             <input
               id="newsletter-email"
