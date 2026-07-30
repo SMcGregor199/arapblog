@@ -1,19 +1,53 @@
 ---
-import { getCollection, render } from "astro:content";
+import { getLiveEntry } from "astro:content";
+import ArticleBody from "../../components/ArticleBody";
 import ArticleLayout from "../../layouts/ArticleLayout.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
 
-export async function getStaticPaths() {
-  const articles = await getCollection("articles", ({ data }) => !data.draft);
-  return articles.map((article) => ({
-    params: { slug: article.id },
-    props: { article },
-  }));
+export const prerender = false;
+
+const slug = Astro.params.slug ?? "";
+const result = await getLiveEntry("articles", { slug });
+const article = result.entry?.data;
+
+if (result.error) {
+  Astro.response.status = 503;
+} else if (!article) {
+  Astro.response.status = 404;
 }
-
-const { article } = Astro.props;
-const { Content } = await render(article);
+Astro.response.headers.set(
+  "Netlify-CDN-Cache-Control",
+  "public, s-maxage=30, stale-while-revalidate=120, durable",
+);
 ---
 
-<ArticleLayout article={article}>
-  <Content />
-</ArticleLayout>
+{
+  result.error ? (
+    <BaseLayout
+      title="Content temporarily unavailable"
+      description="This listening path is temporarily unavailable."
+    >
+      <section class="page-hero">
+        <div class="shell">
+          <p class="eyebrow">Temporary interruption</p>
+          <h1>That path is unavailable right now.</h1>
+          <p>Please try again shortly. The last published version has not been replaced.</p>
+        </div>
+      </section>
+    </BaseLayout>
+  ) : article ? (
+    <ArticleLayout article={article}>
+      <ArticleBody bodyMarkdown={article.bodyMarkdown} />
+    </ArticleLayout>
+  ) : (
+    <BaseLayout title="Path not found" description="That listening path does not exist.">
+      <section class="page-hero">
+        <div class="shell">
+          <p class="eyebrow">404</p>
+          <h1>That path does not exist.</h1>
+          <p><a href="/articles">Browse every listening path.</a></p>
+        </div>
+      </section>
+    </BaseLayout>
+  )
+}

@@ -1,7 +1,8 @@
 # A Rap Blog
 
-A static Astro publication for returning rap fans who want a clear path back into active
-listening.
+An Astro publication for returning rap fans who want a clear path back into active listening.
+The fixed site shell is prerendered; article-dependent routes are rendered on demand from an
+atomic Netlify Blob snapshot.
 
 ## Local development
 
@@ -30,14 +31,22 @@ When the articles are ready and the site should be discoverable, set `site.prela
 
 ## Publishing an article
 
-1. Draft and edit the article in Notion.
-2. Copy the approved version into `src/content/articles/` as Markdown.
-3. Add frontmatter matching the schema in `src/content.config.ts`.
-4. Set `draft: true` while reviewing the Netlify Deploy Preview.
-5. Compare the preview with the approved Notion draft, then set `draft: false`.
+Notion is the canonical editorial source. A signed Notion webhook promotes only revisions whose
+`Sync State` is `Queued`; ordinary edits to a published page become `Changes pending` and leave
+the current public snapshot untouched.
 
-The repository is the canonical source for published content. V1 intentionally has no Notion
-API or Airtable dependency.
+The runtime flow is:
+
+```text
+Notion → notion-to-md → Netlify Blobs → ReactMarkdown → server-rendered HTML
+```
+
+Publishing, updating, and unpublishing do not trigger a Netlify deployment. See
+[`docs/notion-publishing.md`](docs/notion-publishing.md) for the database template, connection,
+webhook, reconciliation, activation, and recovery procedures.
+
+The three files in `src/content/articles/` are retained only as migration source until their
+Notion versions have passed the activation checklist. Runtime routes no longer read them.
 
 ## Brand configuration
 
@@ -46,12 +55,20 @@ The site name, pen name, contact email, support URL, and primary description liv
 
 ## External services
 
-Copy `.env.example` to `.env` for local testing. Configure the same public values in Netlify:
+Copy `.env.example` to `.env` for local testing. Configure the public value in Netlify:
 
 - `PUBLIC_BOOKSHOP_STORE_URL` — the approved Bookshop.org affiliate storefront URL.
 
-No credential or secret is required in the browser. Leave a value blank until that service is
-ready; the site renders an honest pre-launch state instead of a broken form or invented link.
+Configure the four server-only content values in Netlify:
+
+- `NOTION_API_KEY`
+- `NOTION_DATABASE_ID`
+- `NOTION_WEBHOOK_VERIFICATION_TOKEN`
+- `CONTENT_RECONCILE_SECRET`
+
+None of these values is exposed to browser code. Local development reads Notion directly when
+the Notion API key and database ID are present and can include drafts. Production page loads
+never query Notion; they read the active Blob snapshot.
 
 Umami Cloud analytics is configured directly in `src/layouts/BaseLayout.astro`. Its website ID is
 public configuration, and tracking is restricted to the production domains.
@@ -61,8 +78,9 @@ the site's custom-styled signup forms without importing Kit's visual embed.
 
 ## Netlify
 
-`netlify.toml` builds the static `dist/` directory, redirects `www.arapblog.com` to the apex
-domain, and applies baseline security and cache headers.
+`netlify.toml` builds the hybrid Astro output, redirects `www.arapblog.com` to the apex domain,
+and applies baseline security and asset cache headers. Article-dependent responses add a
+30-second Netlify CDN cache with stale-while-revalidate.
 
 After creating the Netlify site:
 
