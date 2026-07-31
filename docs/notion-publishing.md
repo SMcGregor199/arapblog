@@ -121,8 +121,10 @@ curl --fail-with-body \
 ```
 
 Use `{"dryRun":false,"rebuild":false}` to recover only queued publish/unpublish actions after a
-missed webhook. A full rebuild includes `Published` and `Queued` pages, excludes unpublish-queued
-pages, and removes live page IDs no longer returned by the database.
+missed webhook. A full dry-run rebuild also validates `Draft` pages so an initial migration can
+be reviewed before anything is queued. A live full rebuild includes only `Published` and `Queued`
+pages, excludes unpublish-queued pages, and removes live page IDs no longer returned by the
+database.
 
 ## Activation checklist
 

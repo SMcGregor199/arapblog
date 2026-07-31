@@ -167,10 +167,11 @@ export class ContentSynchronizer {
           }
           continue;
         }
-        if (
-          status.syncState !== "Queued" &&
-          !(status.published && status.syncState === "Published")
-        ) {
+        const isPublishCandidate =
+          status.syncState === "Queued" ||
+          (status.published && status.syncState === "Published") ||
+          (dryRun && status.syncState === "Draft");
+        if (!isPublishCandidate) {
           continue;
         }
 

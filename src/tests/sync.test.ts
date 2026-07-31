@@ -157,4 +157,26 @@ describe("content synchronization", () => {
     expect(source.articleFromPage).not.toHaveBeenCalled();
     expect(storage.writes).toHaveLength(writesBefore);
   });
+
+  it("validates draft pages during a full dry run without publishing them", async () => {
+    const storage = new MemoryContentStorage();
+    const source = sourceFixture({
+      metadata: metadataFixture({
+        published: false,
+        syncState: "Draft",
+      }),
+    });
+
+    const result = await new ContentSynchronizer(storage, source).reconcile({
+      dryRun: true,
+      rebuild: true,
+    });
+
+    expect(result.actions).toEqual([
+      { pageId: "page-1", action: "publish", slug: "first-path" },
+    ]);
+    expect(result.articles).toMatchObject([{ slug: "first-path" }]);
+    expect(storage.writes).toEqual([]);
+    expect(source.markPublished).not.toHaveBeenCalled();
+  });
 });
