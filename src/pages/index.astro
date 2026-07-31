@@ -1,13 +1,19 @@
 ---
-import { getCollection } from "astro:content";
+import { getLiveCollection } from "astro:content";
 import ArticleCard from "../components/ArticleCard.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import NewsletterBand from "../components/NewsletterBand.astro";
 
-const articles = (await getCollection("articles", ({ data }) => !data.draft)).sort(
-  (a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf(),
+export const prerender = false;
+
+const result = await getLiveCollection("articles");
+const articles = (result.entries ?? []).map((entry) => entry.data);
+const featured = articles.find((article) => article.featured) || articles[0];
+if (result.error) Astro.response.status = 503;
+Astro.response.headers.set(
+  "Netlify-CDN-Cache-Control",
+  "public, s-maxage=30, stale-while-revalidate=120, durable",
 );
-const featured = articles.find((article) => article.data.featured) || articles[0];
 ---
 
 <BaseLayout>
@@ -21,7 +27,7 @@ const featured = articles.find((article) => article.data.featured) || articles[0
           deserves your attention next.
         </p>
         <div class="hero-actions">
-          <a class="button" href={featured ? `/articles/${featured.id}` : "/articles"}>
+          <a class="button" href={featured ? `/articles/${featured.slug}` : "/articles"}>
             Start a listening path <span aria-hidden="true">→</span>
           </a>
           <a class="text-link" href="/about">How this works</a>
@@ -67,6 +73,13 @@ const featured = articles.find((article) => article.data.featured) || articles[0
       <div class="card-grid">
         {articles.map((article) => <ArticleCard article={article} />)}
       </div>
+      {
+        result.error && (
+          <p class="content-unavailable" role="status">
+            Listening paths are temporarily unavailable. Please try again shortly.
+          </p>
+        )
+      }
     </div>
   </section>
 

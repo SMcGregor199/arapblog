@@ -1,12 +1,13 @@
 ---
-import type { CollectionEntry } from "astro:content";
+import type { Article } from "../lib/content/types";
 
 interface Props {
-  article: CollectionEntry<"articles">;
+  article: Article;
 }
 
 const { article } = Astro.props;
-const date = article.data.publishedAt.toLocaleDateString("en-US", {
+const publishedAt = new Date(article.publishedAt);
+const date = publishedAt.toLocaleDateString("en-US", {
   month: "short",
   day: "numeric",
   year: "numeric",
@@ -17,19 +18,19 @@ const date = article.data.publishedAt.toLocaleDateString("en-US", {
 <article class="article-card">
   <a
     class="card-art"
-    data-accent={article.data.accent}
-    href={`/articles/${article.id}`}
-    aria-label={`Read ${article.data.title}`}
+    data-accent={article.accent}
+    href={`/articles/${article.slug}`}
+    aria-label={`Read ${article.title}`}
   >
-    <span>{article.data.heroLabel}</span>
+    <span>{article.heroLabel}</span>
   </a>
   <div class="card-body">
     <div class="card-meta">
-      <span>{article.data.contentType}</span>
-      <time datetime={article.data.publishedAt.toISOString()}>{date}</time>
+      <span>{article.contentType}</span>
+      <time datetime={publishedAt.toISOString()}>{date}</time>
     </div>
-    <h3><a href={`/articles/${article.id}`}>{article.data.title}</a></h3>
-    <p>{article.data.description}</p>
-    <a class="card-link" href={`/articles/${article.id}`}>Follow this path</a>
+    <h3><a href={`/articles/${article.slug}`}>{article.title}</a></h3>
+    <p>{article.description}</p>
+    <a class="card-link" href={`/articles/${article.slug}`}>Follow this path</a>
   </div>
 </article>
