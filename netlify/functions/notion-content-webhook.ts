@@ -19,9 +19,9 @@ export default async function handler(
   }
 
   if (isVerificationDelivery(payload)) {
-    console.info("Notion webhook verification token", {
-      verificationToken: payload.verification_token,
-    });
+    console.info(
+      `Notion webhook verification token: ${payload.verification_token}`,
+    );
     return new Response(null, { status: 200 });
   }
 

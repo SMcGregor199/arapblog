@@ -74,9 +74,9 @@ describe("Notion webhook signatures", () => {
     expect(response.status).toBe(200);
     expect(fetchMock).not.toHaveBeenCalled();
     expect(infoMock).toHaveBeenCalledOnce();
-    expect(infoMock).toHaveBeenCalledWith("Notion webhook verification token", {
-      verificationToken: "one-time-token",
-    });
+    expect(infoMock).toHaveBeenCalledWith(
+      "Notion webhook verification token: one-time-token",
+    );
     infoMock.mockRestore();
   });
 
