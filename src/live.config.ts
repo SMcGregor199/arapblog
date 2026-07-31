@@ -11,8 +11,16 @@ const articles = defineLiveCollection({
     description: z.string(),
     publishedAt: z.iso.datetime(),
     updatedAt: z.iso.datetime(),
-    author: z.literal("vestige"),
-    contentType: z.enum(["bridge", "guide", "books"]),
+    author: z.string(),
+    contentType: z.enum([
+      "Criticism",
+      "Essay",
+      "Interview",
+      "Reported Feature",
+      "History",
+      "Guide",
+      "News Analysis",
+    ]),
     tags: z.array(z.string()),
     heroLabel: z.string(),
     heroAlt: z.string(),
@@ -22,6 +30,12 @@ const articles = defineLiveCollection({
     readTimeMinutes: z.number().int().min(1),
     readTime: z.string(),
     bodyMarkdown: z.string().min(1),
+    heroImage: z.object({
+      src: z.string(),
+      alt: z.string(),
+      credit: z.string().optional(),
+      creditUrl: z.string().optional(),
+    }).optional(),
   }),
 });
 

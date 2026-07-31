@@ -27,7 +27,11 @@ const jsonLd = {
   description: article.description,
   datePublished: publishedAt.toISOString(),
   dateModified: updatedAt.toISOString(),
-  author: { "@type": "Person", name: article.author },
+  author: {
+    "@type": "Person",
+    name: article.author,
+    url: `${site.url}/contributors/${article.author}`,
+  },
   publisher: { "@type": "Organization", name: site.name, url: site.url },
   mainEntityOfPage: `${site.url}/articles/${article.slug}`,
 };
@@ -52,17 +56,30 @@ const jsonLd = {
           </div>
           <h1>{article.title}</h1>
           <p>{article.description}</p>
-          <p class="byline">By {article.author}</p>
+          <p class="byline">By <a href={`/contributors/${article.author}`}>{article.author}</a></p>
         </div>
-        <div class="hero-record" data-accent={article.accent} role="img" aria-label={article.heroAlt}>
-          <span>{article.heroLabel}</span>
-        </div>
+        {article.heroImage ? (
+          <figure class="article-hero-image">
+            <img src={article.heroImage.src} alt={article.heroImage.alt} width="820" height="820" />
+            {article.heroImage.credit && (
+              <figcaption>
+                {article.heroImage.creditUrl ? (
+                  <a href={article.heroImage.creditUrl} rel="external">{article.heroImage.credit}</a>
+                ) : article.heroImage.credit}
+              </figcaption>
+            )}
+          </figure>
+        ) : (
+          <div class="hero-record" data-accent={article.accent} role="img" aria-label={article.heroAlt}>
+            <span>{article.heroLabel}</span>
+          </div>
+        )}
       </div>
     </header>
     <div class="shell article-grid">
       <aside class="article-rail">
-        <p class="kicker">The promise</p>
-        <p>A clear starting point, a reason for every stop, and no homework for homework’s sake.</p>
+        <p class="kicker">Editorial standard</p>
+        <p>A clear argument, honest sourcing, and enough room for the music to remain complicated.</p>
       </aside>
       <div class="prose">
         {
@@ -75,7 +92,7 @@ const jsonLd = {
         }
         <slot />
         {
-          article.contentType === "books" && bookshopStoreUrl && (
+          article.hasAffiliateLinks && bookshopStoreUrl && (
             <aside class="bookshop-card">
               <div>
                 <p class="kicker">Independent-bookstore option</p>
@@ -161,6 +178,26 @@ const jsonLd = {
       repeating-radial-gradient(circle, transparent 0 14px, rgba(23, 19, 15, 0.4) 15px 17px),
       var(--clay);
     box-shadow: 12px 12px 0 var(--ink);
+  }
+
+  .article-hero-image {
+    margin: 0;
+  }
+
+  .article-hero-image img {
+    width: min(100%, 410px);
+    aspect-ratio: 1;
+    object-fit: cover;
+    border: 1px solid var(--line-strong);
+    box-shadow: 12px 12px 0 var(--ink);
+  }
+
+  .article-hero-image figcaption {
+    max-width: 410px;
+    margin-top: 0.75rem;
+    color: var(--ink-soft);
+    font-family: var(--mono);
+    font-size: 0.68rem;
   }
 
   .hero-record[data-accent="lime"] {

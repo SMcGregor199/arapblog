@@ -1,4 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
+import { rejectNonProductionMutation } from "../../src/lib/content/editorial";
+import { ContributorSynchronizer } from "../../src/lib/content/contributor-sync";
+import { NotionContributorSource } from "../../src/lib/content/notion-contributors";
 import { createNotionArticleSource } from "../../src/lib/content/notion";
 import { createBlobContentStorage } from "../../src/lib/content/storage";
 import { ContentSynchronizer } from "../../src/lib/content/sync";
@@ -15,6 +18,9 @@ export default async function handler(request: Request): Promise<Response> {
       headers: { Allow: "POST" },
     });
   }
+
+  const previewRejection = rejectNonProductionMutation();
+  if (previewRejection) return previewRejection;
 
   if (!isAuthorized(request)) {
     return new Response("Unauthorized", { status: 401 });
@@ -40,11 +46,18 @@ export default async function handler(request: Request): Promise<Response> {
       persistImages: !dryRun,
       prewarmImages: !dryRun,
     });
-    const result = await new ContentSynchronizer(storage, notion).reconcile({
+    const reconcileOptions = {
       dryRun,
       rebuild: body.rebuild ?? false,
-    });
-    return Response.json(result, {
+    };
+    const result = await new ContentSynchronizer(storage, notion).reconcile(
+      reconcileOptions,
+    );
+    const contributors = await new ContributorSynchronizer(
+      storage,
+      new NotionContributorSource(notion.notion),
+    ).reconcile(reconcileOptions);
+    return Response.json({ ...result, contributors }, {
       status: 200,
       headers: { "Cache-Control": "no-store" },
     });

@@ -1,0 +1,16 @@
+---
+import type { EditorialCollection } from "../lib/content/types";
+
+interface Props {
+  collection: EditorialCollection;
+}
+
+const { collection } = Astro.props;
+---
+
+<article class="collection-card">
+  <p class="kicker">Featured collection · {collection.selections.length} selections</p>
+  <h3><a href={`/collections/${collection.slug}`}>{collection.title}</a></h3>
+  <p>{collection.description}</p>
+  <a class="card-link" href={`/collections/${collection.slug}`}>Open collection</a>
+</article>

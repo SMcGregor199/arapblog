@@ -1,12 +1,17 @@
 import { createHmac } from "node:crypto";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import webhookHandler, {
   verifyNotionSignature,
 } from "../../netlify/functions/notion-content-webhook";
 
+beforeEach(() => {
+  process.env.CONTEXT = "production";
+});
+
 afterEach(() => {
   vi.unstubAllGlobals();
   delete process.env.NOTION_WEBHOOK_VERIFICATION_TOKEN;
+  delete process.env.CONTEXT;
 });
 
 describe("Notion webhook signatures", () => {
@@ -105,5 +110,16 @@ describe("Notion webhook signatures", () => {
     expect(response.status).toBe(202);
     expect(infoMock).not.toHaveBeenCalled();
     infoMock.mockRestore();
+  });
+
+  it("rejects every webhook delivery outside production", async () => {
+    process.env.CONTEXT = "deploy-preview";
+    const response = await webhookHandler(
+      new Request(
+        "https://deploy-preview-1--arapblog.netlify.app/.netlify/functions/notion-content-webhook",
+        { method: "POST", body: JSON.stringify({ verification_token: "token" }) },
+      ),
+    );
+    expect(response.status).toBe(403);
   });
 });

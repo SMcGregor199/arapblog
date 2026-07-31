@@ -1,4 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { rejectNonProductionMutation } from "../../src/lib/content/editorial";
 
 export default async function handler(
   request: Request,
@@ -9,6 +10,10 @@ export default async function handler(
       headers: { Allow: "POST" },
     });
   }
+
+
+  const previewRejection = rejectNonProductionMutation();
+  if (previewRejection) return previewRejection;
 
   const rawBody = await request.text();
   let payload: unknown;

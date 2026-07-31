@@ -1,0 +1,27 @@
+---
+import ArticleCard from "../../components/ArticleCard.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import CuratedLinkCard from "../../components/CuratedLinkCard.astro";
+import { getEditorialSnapshot } from "../../lib/content/editorial";
+import { editorialSlug } from "../../lib/editorial-routing";
+
+export const prerender = false;
+const editorial = await getEditorialSnapshot();
+const slug = Astro.params.slug ?? "";
+const originals = editorial.originals.filter((item) => item.tags.some((topic) => editorialSlug(topic) === slug));
+const curated = editorial.curatedLinks.filter((item) => item.topics.some((topic) => editorialSlug(topic) === slug));
+const displayName = [...editorial.originals.flatMap((item) => item.tags), ...editorial.curatedLinks.flatMap((item) => item.topics)].find((topic) => editorialSlug(topic) === slug);
+if (!displayName) Astro.response.status = 404;
+---
+
+{displayName ? (
+  <BaseLayout title={displayName} description={`Original stories and selected reading about ${displayName}.`}>
+    <header class="page-hero"><div class="shell"><p class="eyebrow">Topic</p><h1>{displayName}</h1><p>{originals.length} original {originals.length === 1 ? "story" : "stories"} · {curated.length} selected {curated.length === 1 ? "piece" : "pieces"}</p></div></header>
+    {originals.length > 0 && <section class="content-section"><div class="shell"><div class="section-heading"><div><p class="kicker">From A Rap Blog</p><h2>Originals</h2></div></div><div class="card-grid">{originals.map((item) => <ArticleCard article={item} />)}</div></div></section>}
+    {curated.length > 0 && <section class="content-section topic-reading"><div class="shell"><div class="section-heading"><div><p class="kicker">Published elsewhere</p><h2>Selected reading</h2></div></div><div class="reading-list">{curated.map((item, index) => <CuratedLinkCard item={item} index={index} />)}</div></div></section>}
+  </BaseLayout>
+) : (
+  <BaseLayout title="Topic not found" description="That topic does not exist."><section class="page-hero"><div class="shell"><p class="eyebrow">404</p><h1>Topic not found.</h1><p><a href="/topics">Browse all topics.</a></p></div></section></BaseLayout>
+)}
+
+<style>.topic-reading { background: var(--paper-deep); }</style>

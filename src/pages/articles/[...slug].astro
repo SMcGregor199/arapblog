@@ -28,12 +28,12 @@ Astro.response.headers.set(
   unavailable ? (
     <BaseLayout
       title="Content temporarily unavailable"
-      description="This listening path is temporarily unavailable."
+      description="This story is temporarily unavailable."
     >
       <section class="page-hero">
         <div class="shell">
           <p class="eyebrow">Temporary interruption</p>
-          <h1>That path is unavailable right now.</h1>
+          <h1>That story is unavailable right now.</h1>
           <p>Please try again shortly. The last published version has not been replaced.</p>
         </div>
       </section>
@@ -43,12 +43,12 @@ Astro.response.headers.set(
       <ArticleBody bodyMarkdown={article.bodyMarkdown} />
     </ArticleLayout>
   ) : (
-    <BaseLayout title="Path not found" description="That listening path does not exist.">
+    <BaseLayout title="Story not found" description="That story does not exist.">
       <section class="page-hero">
         <div class="shell">
           <p class="eyebrow">404</p>
-          <h1>That path does not exist.</h1>
-          <p><a href="/articles">Browse every listening path.</a></p>
+          <h1>That story does not exist.</h1>
+          <p><a href="/articles">Browse every story.</a></p>
         </div>
       </section>
     </BaseLayout>

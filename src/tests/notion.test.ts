@@ -58,7 +58,7 @@ describe("Notion article source", () => {
       title: "A Complete Guide",
       slug: "a-complete-guide",
       description: "A useful description.",
-      contentType: "guide",
+      contentType: "Guide",
       tags: ["Kendrick", "listening path"],
       heroLabel: "The route",
       heroAlt: "An abstract route across a record",

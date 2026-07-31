@@ -2,9 +2,9 @@
 
 ## Isolation
 
-Create a separate internal Notion connection for A Rap Blog. Give it access only to a new
-database named **A Rap Blog Articles**. Do not reuse the personal-site connection or share other
-pages with it.
+Create a separate internal Notion connection for A Rap Blog. Give it access only to two new
+databases named **A Rap Blog Originals** and **A Rap Blog Contributors**. Do not reuse the
+personal-site connection or share other pages with it.
 
 Configure the following database properties exactly. Property names are part of the integration
 contract.
@@ -14,13 +14,18 @@ contract.
 | `Name` | Title | Required |
 | `Slug` | Text | Leave blank on first publication to generate it from `Name`; immutable afterward |
 | `Description` | Text | Required |
-| `Content Type` | Select | `bridge`, `guide`, `books` |
+| `Content Type` | Select | `Criticism`, `Essay`, `Interview`, `Reported Feature`, `History`, `Guide`, `News Analysis` |
+| `Contributor Slug` | Text | Required; must match a published contributor profile |
 | `Tags` | Multi-select | Zero or more public tags |
 | `Hero Label` | Text | Required |
 | `Hero Alt` | Text | Required, descriptive alternative text |
 | `Accent` | Select | `clay`, `lime`, `violet` |
 | `Has Affiliate Links` | Checkbox | Enables the article disclosure when the storefront is configured |
 | `Featured` | Checkbox | Used by the homepage; the newest article is the fallback |
+| `Hero Image Source` | URL | Optional; owned, commissioned, licensed, or original artwork only |
+| `Hero Image Alt` | Text | Required whenever `Hero Image Source` is present |
+| `Hero Image Credit` | Text | Optional visible credit |
+| `Hero Image Credit URL` | URL | Optional creator or license URL |
 | `Published` | Checkbox | Managed by the sync service |
 | `Publication Date` | Date | Managed by the sync service and set once |
 | `Sync State` | Select | `Draft`, `Changes pending`, `Queued`, `Published`, `Unpublish queued`, `Failed` |
@@ -35,12 +40,32 @@ blocks, lists, tables, task lists, and images are supported. Image captions beco
 uncaptioned images receive the generic `Article image` fallback and should be corrected before
 publication.
 
+Configure **A Rap Blog Contributors** with these properties. It uses the same Draft → Changes
+pending → Queued → Published lifecycle and failure behavior as originals.
+
+| Property | Notion type | Configuration |
+| --- | --- | --- |
+| `Name` | Title | Public display name; required |
+| `Slug` | Text | Generated from `Name` on first publication; immutable afterward |
+| `Bio` | Text | Required public biography |
+| `Role` | Select | Required, for example `Founding editor` or `Contributor` |
+| `Website` | URL | Optional |
+| `Bluesky` | URL | Optional |
+| `Instagram` | URL | Optional |
+| `Published` | Checkbox | Managed by the sync service |
+| `Sync State` | Select | `Draft`, `Changes pending`, `Queued`, `Published`, `Unpublish queued`, `Failed` |
+| `Sync Error` | Text | Managed by the sync service |
+| `Last Synced At` | Date | Managed by the sync service |
+| `Publish / Update` | Button | Edit `Sync State` to `Queued` |
+| `Unpublish` | Button | Edit `Sync State` to `Unpublish queued` |
+
 ## Netlify values
 
 Add these values as private environment variables for Functions and Runtime:
 
 - `NOTION_API_KEY`: token for the isolated connection.
-- `NOTION_DATABASE_ID`: ID of **A Rap Blog Articles**. The code resolves its first data source.
+- `NOTION_DATABASE_ID`: ID of **A Rap Blog Originals**. The code resolves its first data source.
+- `NOTION_CONTRIBUTORS_DATABASE_ID`: ID of **A Rap Blog Contributors**.
 - `NOTION_WEBHOOK_VERIFICATION_TOKEN`: token created while verifying the webhook subscription.
 - `CONTENT_RECONCILE_SECRET`: a long random recovery secret.
 
@@ -68,9 +93,8 @@ deliveries must have a valid `X-Notion-Signature` HMAC-SHA256 signature. The pub
 verifies the raw request before invoking the protected `notion-content-sync` Background
 Function, then responds with `202`.
 
-During initial production activation only, the verification branch logs the one-time
-`verification_token` to restricted Function logs. Remove that `console.info` and deploy again
-immediately after the subscription is verified. No content event enters that logging branch.
+The verification branch acknowledges the one-time `verification_token` without logging or
+persisting it. No verification delivery enters the content synchronization branch.
 
 Events are claimed by event ID. A repeated delivery is ignored after completion. Distinct
 concurrent events use conditional manifest writes and retry against the latest active version.
@@ -128,16 +152,18 @@ database.
 
 ## Activation checklist
 
-1. Deploy the pipeline while `site.prelaunch` remains `true`.
-2. Create the isolated connection and database, then add the private Netlify values.
+1. Keep the currently published Netlify deploy locked while the new production deploy builds.
+2. Create the isolated connection and both databases, then add the private Netlify values.
 3. Configure and verify the webhook.
-4. Copy the three migration Markdown articles into Notion with matching metadata.
+4. Copy the three migration articles into Notion as `Guide` originals with matching slugs and
+   dates, set `Contributor Slug` to `vestige`, and create the vestige contributor record.
 5. Run a full reconciliation dry run and compare its normalized output with the current site.
 6. Queue all three pages and verify article HTML with JavaScript disabled, metadata, images, the
-   homepage, `/articles`, `/rss.xml`, `/sitemap.xml`, and `articles-json`.
-7. Remove the three migration Markdown files only after the live snapshot is verified.
+   homepage, `/articles`, `/reading`, `/rss.xml`, `/sitemap.xml`, `articles-json`, and
+   `editorial-json`.
+7. Compare the three published pages with the verbatim preview snapshot before promotion.
 8. Test a revision and an unpublish/republish cycle.
-9. Remove prelaunch crawler protection in a separate reviewed change.
+9. Inspect the successful production deploy before publishing it exactly once.
 
 Keep Netlify auto-recharge disabled unless intentionally approved, and review Function and web
 request usage after the first month.
@@ -156,6 +182,8 @@ upstream adapter exception and reassess when Netlify publishes a compatible depe
 ## Public and storage endpoints
 
 - `GET /.netlify/functions/articles-json` returns the active public article array, supports
+  `ETag` and `If-None-Match`, and never refreshes Notion.
+- `GET /.netlify/functions/editorial-json` returns the complete version-two snapshot, supports
   `ETag` and `If-None-Match`, and never refreshes Notion.
 - `GET /.netlify/functions/notion-image?imageId=…` serves stable, cached WebP images with
   immutable caching and a last-known-good fallback.

@@ -1,4 +1,5 @@
 import type { LiveLoader } from "astro/loaders";
+import { getEditorialSnapshot, previewContentEnabled } from "./editorial";
 import { serverEnvironment } from "./environment";
 import { createNotionArticleSource } from "./notion";
 import { readActiveSnapshot } from "./snapshot";
@@ -30,6 +31,18 @@ export function createArticleRepository(options: {
   storage?: ContentStorage;
   localNotionPreview?: boolean;
 } = {}): ArticleRepository {
+  if (!options.storage && previewContentEnabled()) {
+    return {
+      async listArticles() {
+        return (await getEditorialSnapshot()).originals;
+      },
+      async getArticleBySlug(slug) {
+        return (await getEditorialSnapshot()).originals.find(
+          (article) => article.slug === slug,
+        );
+      },
+    };
+  }
   const storage = options.storage ?? createBlobContentStorage();
   const localNotionPreview =
     options.localNotionPreview ?? shouldUseLocalNotionPreview();

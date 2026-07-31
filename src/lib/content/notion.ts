@@ -9,7 +9,7 @@ import { serverEnvironment } from "./environment";
 import {
   calculateReadingTime,
   isArticleAccent,
-  isContentType,
+  normalizeContentType,
   normalizeArticle,
   slugifyTitle,
 } from "./article";
@@ -36,12 +36,17 @@ export const NOTION_PROPERTIES = {
   slug: "Slug",
   description: "Description",
   contentType: "Content Type",
+  contributor: "Contributor Slug",
   tags: "Tags",
   heroLabel: "Hero Label",
   heroAlt: "Hero Alt",
   accent: "Accent",
   hasAffiliateLinks: "Has Affiliate Links",
   featured: "Featured",
+  heroImageSource: "Hero Image Source",
+  heroImageAlt: "Hero Image Alt",
+  heroImageCredit: "Hero Image Credit",
+  heroImageCreditUrl: "Hero Image Credit URL",
   published: "Published",
   publicationDate: "Publication Date",
   syncState: "Sync State",
@@ -55,12 +60,17 @@ export interface NotionArticleMetadata {
   slug: string;
   description: string;
   contentType: ContentType;
+  contributor: string;
   tags: string[];
   heroLabel: string;
   heroAlt: string;
   accent: ArticleAccent;
   hasAffiliateLinks: boolean;
   featured: boolean;
+  heroImageSource: string;
+  heroImageAlt: string;
+  heroImageCredit: string;
+  heroImageCreditUrl: string;
   published: boolean;
   publicationDate: string;
   syncState: SyncState;
@@ -153,12 +163,7 @@ export class NotionArticleSource {
     if (!title) {
       throw new ContentError("Name is required.", "VALIDATION");
     }
-    if (!isContentType(contentTypeValue)) {
-      throw new ContentError(
-        `Content Type must be one of: bridge, guide, books.`,
-        "VALIDATION",
-      );
-    }
+    const contentType = normalizeContentType(contentTypeValue);
     if (!isArticleAccent(accentValue)) {
       throw new ContentError(
         `Accent must be one of: clay, lime, violet.`,
@@ -187,7 +192,9 @@ export class NotionArticleSource {
       title,
       slug: richTextValue(properties[NOTION_PROPERTIES.slug]),
       description,
-      contentType: contentTypeValue,
+      contentType,
+      contributor:
+        richTextValue(properties[NOTION_PROPERTIES.contributor]) || "vestige",
       tags: multiSelectValue(properties[NOTION_PROPERTIES.tags]),
       heroLabel,
       heroAlt,
@@ -196,6 +203,12 @@ export class NotionArticleSource {
         properties[NOTION_PROPERTIES.hasAffiliateLinks],
       ),
       featured: checkboxValue(properties[NOTION_PROPERTIES.featured]),
+      heroImageSource: urlValue(properties[NOTION_PROPERTIES.heroImageSource]),
+      heroImageAlt: richTextValue(properties[NOTION_PROPERTIES.heroImageAlt]),
+      heroImageCredit: richTextValue(properties[NOTION_PROPERTIES.heroImageCredit]),
+      heroImageCreditUrl: urlValue(
+        properties[NOTION_PROPERTIES.heroImageCreditUrl],
+      ),
       published: checkboxValue(properties[NOTION_PROPERTIES.published]),
       publicationDate: dateValue(properties[NOTION_PROPERTIES.publicationDate]),
       syncState: syncStateValue as SyncState,
@@ -247,7 +260,7 @@ export class NotionArticleSource {
       description: metadata.description,
       publishedAt,
       updatedAt: this.now().toISOString(),
-      author: "vestige",
+      author: metadata.contributor,
       contentType: metadata.contentType,
       tags: metadata.tags,
       heroLabel: metadata.heroLabel,
@@ -255,6 +268,20 @@ export class NotionArticleSource {
       accent: metadata.accent,
       hasAffiliateLinks: metadata.hasAffiliateLinks,
       featured: metadata.featured,
+      ...(metadata.heroImageSource
+        ? {
+            heroImage: {
+              src: metadata.heroImageSource,
+              alt: metadata.heroImageAlt,
+              ...(metadata.heroImageCredit
+                ? { credit: metadata.heroImageCredit }
+                : {}),
+              ...(metadata.heroImageCreditUrl
+                ? { creditUrl: metadata.heroImageCreditUrl }
+                : {}),
+            },
+          }
+        : {}),
       ...readingTime,
       bodyMarkdown,
     });
@@ -427,6 +454,10 @@ function checkboxValue(value: unknown): boolean {
 
 function dateValue(value: unknown): string {
   return stringValue(propertyRecord(propertyRecord(value).date).start);
+}
+
+function urlValue(value: unknown): string {
+  return stringValue(propertyRecord(value).url);
 }
 
 function stringValue(value: unknown): string {

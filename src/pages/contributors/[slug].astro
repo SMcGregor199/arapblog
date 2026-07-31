@@ -1,0 +1,28 @@
+---
+import ArticleCard from "../../components/ArticleCard.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getEditorialSnapshot } from "../../lib/content/editorial";
+
+export const prerender = false;
+const editorial = await getEditorialSnapshot();
+const contributor = editorial.contributors.find((item) => item.slug === Astro.params.slug);
+if (!contributor) Astro.response.status = 404;
+const originals = contributor ? editorial.originals.filter((item) => item.author === contributor.slug) : [];
+---
+
+{contributor ? (
+  <BaseLayout title={contributor.displayName} description={contributor.bio}>
+    <header class="page-hero contributor-hero"><div class="shell contributor-heading"><div class="contributor-monogram" aria-hidden="true">{contributor.displayName.slice(0, 1)}</div><div><p class="eyebrow">{contributor.role}</p><h1>{contributor.displayName}</h1><p>{contributor.bio}</p>{contributor.links.length > 0 && <ul>{contributor.links.map((link) => <li><a href={link.url} rel="external">{link.label}<span class="sr-only"> (external)</span></a></li>)}</ul>}</div></div></header>
+    <section class="content-section"><div class="shell"><div class="section-heading"><div><p class="kicker">Work</p><h2>Stories by {contributor.displayName}</h2></div></div><div class="card-grid">{originals.map((item) => <ArticleCard article={item} />)}</div></div></section>
+  </BaseLayout>
+) : (
+  <BaseLayout title="Contributor not found" description="That contributor profile does not exist."><section class="page-hero"><div class="shell"><p class="eyebrow">404</p><h1>Contributor not found.</h1><p><a href="/about">About A Rap Blog.</a></p></div></section></BaseLayout>
+)}
+
+<style>
+  .contributor-heading { display: grid; grid-template-columns: 180px minmax(0, 680px); gap: clamp(2rem, 6vw, 5rem); align-items: center; }
+  .contributor-monogram { display: grid; aspect-ratio: 1; place-items: center; border-radius: 50%; background: var(--teal, var(--violet)); color: var(--paper); font-family: var(--serif); font-size: 6rem; }
+  .contributor-heading h1 { margin-top: 1rem; }
+  .contributor-heading p:not(.eyebrow) { margin-top: 1.3rem; }
+  @media (max-width: 650px) { .contributor-heading { grid-template-columns: 1fr; } .contributor-monogram { width: 120px; } }
+</style>

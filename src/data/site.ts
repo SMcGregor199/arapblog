@@ -4,7 +4,8 @@ export const site = {
   shortName: "ARB",
   url: "https://arapblog.com",
   description:
-    "Opinionated listening paths for rap fans finding their way back in.",
+    "Original criticism and carefully selected rap writing for readers who want context, argument, and discovery.",
+  headline: "The writing rap deserves.",
   author: "vestige",
   email: "vestige@arapblog.com",
   supportUrl: "https://buymeacoffee.com/arapblog",
@@ -12,7 +13,9 @@ export const site = {
 };
 
 export const navigation = [
-  { href: "/articles", label: "All paths" },
+  { href: "/articles", label: "Stories" },
+  { href: "/reading", label: "Reading" },
+  { href: "/topics", label: "Topics" },
   { href: "/about", label: "About" },
   { href: "/newsletter", label: "Newsletter" },
 ];

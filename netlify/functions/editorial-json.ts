@@ -4,10 +4,10 @@ import { getEditorialSnapshot } from "../../src/lib/content/editorial";
 import type { ContentStorage } from "../../src/lib/content/storage";
 
 export default async function handler(request: Request): Promise<Response> {
-  return serveArticlesJson(request);
+  return serveEditorialJson(request);
 }
 
-export async function serveArticlesJson(
+export async function serveEditorialJson(
   request: Request,
   storage?: ContentStorage,
 ): Promise<Response> {
@@ -19,27 +19,26 @@ export async function serveArticlesJson(
   }
 
   try {
-    const articles = (await getEditorialSnapshot(storage)).originals;
-    const etag = `"${contentHash(articles)}"`;
+    const editorial = await getEditorialSnapshot(storage);
+    const etag = `"${contentHash(editorial)}"`;
     const headers = {
       ...contentCacheHeaders(),
       "Content-Type": "application/json; charset=utf-8",
       ETag: etag,
     };
-    const conditionalEtags =
-      request.headers
-        .get("if-none-match")
-        ?.split(",")
-        .map((value) => value.trim().replace(/^W\//, "")) ?? [];
-    if (conditionalEtags.includes(etag) || conditionalEtags.includes("*")) {
+    const requested = request.headers
+      .get("if-none-match")
+      ?.split(",")
+      .map((value) => value.trim().replace(/^W\//, "")) ?? [];
+    if (requested.includes(etag) || requested.includes("*")) {
       return new Response(null, { status: 304, headers });
     }
     return new Response(
-      request.method === "HEAD" ? null : JSON.stringify(articles),
+      request.method === "HEAD" ? null : JSON.stringify(editorial),
       { status: 200, headers },
     );
   } catch (error) {
-    console.error("Articles JSON failed", {
+    console.error("Editorial JSON failed", {
       error: error instanceof Error ? error.message : String(error),
     });
     return new Response("Published content is temporarily unavailable.", {

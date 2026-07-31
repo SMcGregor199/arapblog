@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import {
   ARTICLE_ACCENTS,
   CONTENT_TYPES,
+  LEGACY_CONTENT_TYPES,
   ContentError,
   type Article,
   type ArticleAccent,
@@ -51,6 +52,7 @@ export function calculateReadingTime(markdown: string): {
 }
 
 export function normalizeArticle(value: Article): Article {
+  const heroImage = normalizeHeroImage(value.heroImage);
   const article: Article = {
     notionPageId: requiredString(value.notionPageId, "Notion page ID"),
     slug: assertValidSlug(value.slug),
@@ -58,8 +60,8 @@ export function normalizeArticle(value: Article): Article {
     description: requiredString(value.description, "Description"),
     publishedAt: validDate(value.publishedAt, "Publication Date"),
     updatedAt: validDate(value.updatedAt, "Updated date"),
-    author: "vestige",
-    contentType: enumValue(value.contentType, CONTENT_TYPES, "Content Type"),
+    author: optionalString(value.author) || "vestige",
+    contentType: normalizeContentType(value.contentType),
     tags: [...new Set(value.tags.map((tag) => tag.trim()).filter(Boolean))],
     heroLabel: requiredString(value.heroLabel, "Hero Label"),
     heroAlt: requiredString(value.heroAlt, "Hero Alt"),
@@ -69,6 +71,7 @@ export function normalizeArticle(value: Article): Article {
     readTimeMinutes: value.readTimeMinutes,
     readTime: value.readTime,
     bodyMarkdown: value.bodyMarkdown.trim(),
+    ...(heroImage ? { heroImage } : {}),
   };
 
   if (!article.bodyMarkdown) {
@@ -168,6 +171,44 @@ export function isContentType(value: string): value is ContentType {
   return CONTENT_TYPES.includes(value as ContentType);
 }
 
+export function normalizeContentType(value: unknown): ContentType {
+  if (typeof value === "string" && isContentType(value)) return value;
+  if (
+    typeof value === "string" &&
+    LEGACY_CONTENT_TYPES.includes(value as (typeof LEGACY_CONTENT_TYPES)[number])
+  ) {
+    return "Guide";
+  }
+  throw new ContentError(
+    `Content Type must be one of: ${CONTENT_TYPES.join(", ")}.`,
+    "VALIDATION",
+  );
+}
+
 export function isArticleAccent(value: string): value is ArticleAccent {
   return ARTICLE_ACCENTS.includes(value as ArticleAccent);
+}
+
+function optionalString(value: unknown): string {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function normalizeHeroImage(value: Article["heroImage"]): Article["heroImage"] {
+  if (!value) return undefined;
+  const src = optionalString(value.src);
+  const alt = optionalString(value.alt);
+  if (!src || !alt) {
+    throw new ContentError(
+      "Hero image source and alternative text must be provided together.",
+      "VALIDATION",
+    );
+  }
+  const credit = optionalString(value.credit);
+  const creditUrl = optionalString(value.creditUrl);
+  return {
+    src,
+    alt,
+    ...(credit ? { credit } : {}),
+    ...(creditUrl ? { creditUrl } : {}),
+  };
 }

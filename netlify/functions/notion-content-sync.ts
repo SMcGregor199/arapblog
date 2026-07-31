@@ -1,4 +1,7 @@
 import type { Config } from "@netlify/functions";
+import { isProductionContext } from "../../src/lib/content/editorial";
+import { ContributorSynchronizer } from "../../src/lib/content/contributor-sync";
+import { NotionContributorSource } from "../../src/lib/content/notion-contributors";
 import { createNotionArticleSource } from "../../src/lib/content/notion";
 import { createBlobContentStorage } from "../../src/lib/content/storage";
 import {
@@ -9,6 +12,10 @@ import { verifyNotionSignature } from "./notion-content-webhook";
 
 export default async function handler(request: Request): Promise<void> {
   if (request.method !== "POST") return;
+  if (!isProductionContext()) {
+    console.error("Rejected non-production Notion synchronization request");
+    return;
+  }
   const rawBody = await request.text();
   const token = process.env.NOTION_WEBHOOK_VERIFICATION_TOKEN?.trim() ?? "";
   const signature = request.headers.get("x-notion-signature") ?? "";
@@ -21,7 +28,11 @@ export default async function handler(request: Request): Promise<void> {
     const event = parseWebhookEvent(JSON.parse(rawBody));
     const storage = createBlobContentStorage();
     const notion = createNotionArticleSource(storage);
-    await new ContentSynchronizer(storage, notion).processWebhook(event);
+    const contributors = new NotionContributorSource(notion.notion);
+    await Promise.all([
+      new ContentSynchronizer(storage, notion).processWebhook(event),
+      new ContributorSynchronizer(storage, contributors).processWebhook(event),
+    ]);
   } catch (error) {
     console.error("Background Notion content synchronization failed", {
       error: error instanceof Error ? error.message : String(error),

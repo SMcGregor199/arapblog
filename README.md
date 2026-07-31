@@ -1,8 +1,9 @@
 # A Rap Blog
 
-An Astro publication for returning rap fans who want a clear path back into active listening.
-The fixed site shell is prerendered; article-dependent routes are rendered on demand from an
-atomic Netlify Blob snapshot.
+An Astro publication for original rap criticism and carefully selected outside writing. Static
+pages are prerendered; editorial routes are rendered on demand from an atomic version-two
+Netlify Blob snapshot. Deploy Previews use a code-backed snapshot and cannot mutate Notion or
+Blobs.
 
 ## Local development
 
@@ -20,14 +21,10 @@ Run the production checks with:
 npm run build
 ```
 
-## Prelaunch protection
+## Crawler protection
 
-The site is intentionally in prelaunch mode. `site.prelaunch` in `src/data/site.ts` is set to
-`true`, which adds `noindex`, `nofollow`, and `noarchive` directives to every HTML page and
-blocks all crawlers in `robots.txt`.
-
-When the articles are ready and the site should be discoverable, set `site.prelaunch` to
-`false`, rebuild, and confirm that `dist/robots.txt` allows crawling before deploying.
+`site.prelaunch` in `src/data/site.ts` controls site-wide crawler protection. It is currently
+disabled. Re-enable it only for an intentionally private staging publication.
 
 ## Publishing an article
 
@@ -45,8 +42,13 @@ Publishing, updating, and unpublishing do not trigger a Netlify deployment. See
 [`docs/notion-publishing.md`](docs/notion-publishing.md) for the database template, connection,
 webhook, reconciliation, activation, and recovery procedures.
 
-The three files in `src/content/articles/` are retained only as migration source until their
-Notion versions have passed the activation checklist. Runtime routes no longer read them.
+The version-two snapshot contains `originals`, `curatedLinks`, `collections`, and `contributors`.
+`articles-json` remains backward-compatible by returning only originals; `editorial-json` returns
+the complete snapshot with ETag support. Curated links always lead to their canonical publication
+and remain out of RSS as individual items; originals and collections are included.
+
+The three launch guides are preserved verbatim in the generated preview snapshot with their
+existing slugs and publication dates. Production continues to read the atomic Blob snapshot.
 
 ## Brand configuration
 
@@ -59,16 +61,17 @@ Copy `.env.example` to `.env` for local testing. Configure the public value in N
 
 - `PUBLIC_BOOKSHOP_STORE_URL` — the approved Bookshop.org affiliate storefront URL.
 
-Configure the four server-only content values in Netlify:
+Configure the five server-only content values in Netlify:
 
 - `NOTION_API_KEY`
 - `NOTION_DATABASE_ID`
+- `NOTION_CONTRIBUTORS_DATABASE_ID`
 - `NOTION_WEBHOOK_VERIFICATION_TOKEN`
 - `CONTENT_RECONCILE_SECRET`
 
-None of these values is exposed to browser code. Local development reads Notion directly when
-the Notion API key and database ID are present and can include drafts. Production page loads
-never query Notion; they read the active Blob snapshot.
+None of these values is exposed to browser code. Local development and every non-production
+Netlify context use the immutable preview dataset and reject content mutation. Production page
+loads never query Notion; they read the active Blob snapshot.
 
 Umami Cloud analytics is configured directly in `src/layouts/BaseLayout.astro`. Its website ID is
 public configuration, and tracking is restricted to the production domains.

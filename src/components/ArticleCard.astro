@@ -31,6 +31,9 @@ const date = publishedAt.toLocaleDateString("en-US", {
     </div>
     <h3><a href={`/articles/${article.slug}`}>{article.title}</a></h3>
     <p>{article.description}</p>
-    <a class="card-link" href={`/articles/${article.slug}`}>Follow this path</a>
+    <p class="card-byline">
+      By <a href={`/contributors/${article.author}`}>{article.author}</a>
+    </p>
+    <a class="card-link" href={`/articles/${article.slug}`}>Read story</a>
   </div>
 </article>
