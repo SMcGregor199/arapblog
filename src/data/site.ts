@@ -1,5 +1,5 @@
 export const site = {
-  prelaunch: true,
+  prelaunch: false,
   name: "A Rap Blog",
   shortName: "ARB",
   url: "https://arapblog.com",
