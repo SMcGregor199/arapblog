@@ -3,14 +3,17 @@ import { getLiveEntry } from "astro:content";
 import ArticleBody from "../../components/ArticleBody";
 import ArticleLayout from "../../layouts/ArticleLayout.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import { isLiveEntryNotFoundError } from "../../lib/content/repository";
 
 export const prerender = false;
 
 const slug = Astro.params.slug ?? "";
 const result = await getLiveEntry("articles", { slug });
 const article = result.entry?.data;
+const unavailable =
+  Boolean(result.error) && !isLiveEntryNotFoundError(result.error);
 
-if (result.error) {
+if (unavailable) {
   Astro.response.status = 503;
 } else if (!article) {
   Astro.response.status = 404;
@@ -22,7 +25,7 @@ Astro.response.headers.set(
 ---
 
 {
-  result.error ? (
+  unavailable ? (
     <BaseLayout
       title="Content temporarily unavailable"
       description="This listening path is temporarily unavailable."

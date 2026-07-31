@@ -22,6 +22,10 @@ export interface ArticleEntryFilter {
   includeDrafts?: boolean;
 }
 
+export function isLiveEntryNotFoundError(error: unknown): boolean {
+  return error instanceof Error && error.name === "LiveEntryNotFoundError";
+}
+
 export function createArticleRepository(options: {
   storage?: ContentStorage;
   localNotionPreview?: boolean;
