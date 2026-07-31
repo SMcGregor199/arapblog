@@ -1,5 +1,6 @@
 ---
 import "../styles/global.css";
+import "../styles/variant-4.css";
 import SiteFooter from "../components/SiteFooter.astro";
 import SiteHeader from "../components/SiteHeader.astro";
 import { site } from "../data/site";
@@ -34,7 +35,10 @@ const socialImage = new URL(image, Astro.site);
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <meta name="generator" content={Astro.generator} />
-    <meta name="theme-color" content={designVariant === "3" ? "#101b1b" : "#f3efe5"} />
+    <meta
+      name="theme-color"
+      content={designVariant === "3" ? "#101b1b" : designVariant === "4" ? "#f4efe6" : "#f3efe5"}
+    />
     <meta name="description" content={description} />
     {
       site.prelaunch && (
