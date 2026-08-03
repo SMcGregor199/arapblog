@@ -28,26 +28,26 @@ Required properties:
 
 Create filtered views and page templates named **Essays**, **Roundups**, **Collections**, and **Listening Guides**. Each view filters its matching Publication Type. Each template preselects its type and Draft state. The Listening Guides template begins with the archive philosophy: provide an opinionated route into an artist, scene, album, or idea; say where to start and what to listen for; leave room for the reader’s own relationship with the music.
 
-### A Rap Blog Curated Pieces
+### A Rap Blog External Pieces
 
 Properties: `Name` (title), `ID` (rich text slug), `Canonical URL` (URL), `Writer` (rich text), `Source Publication` (rich text), `Original Date` (date), `Topics` (multi-select), and `Annotation` (rich text). The annotation and selection must be written by the editor. Canonical URLs are unique after host/trailing-slash normalization.
 
-### A Rap Blog Selections
+### A Rap Blog Publication Contents
 
-Properties: `Name` (title), `Parent Publication` (relation to Publications), `Order` (number), `Curated Piece` (relation), and `Publication` (relation). Exactly one target relation is required.
+Properties: `Name` (title), `Appears In` (relation to Publications), `Display Order` (number), `External Piece` (relation), and `Internal Publication` (relation). Exactly one target relation is required.
 
-- A Roundup may select only Curated Pieces.
-- A Collection may select Essays, Listening Guides, and Curated Pieces.
+- A Roundup may select only External Pieces.
+- A Collection may select Essays, Listening Guides, and External Pieces.
 - A Collection may not select a Roundup or Collection.
 - Order values must be positive and unique within the parent.
 
-Editing a Curated Piece or Selection moves every affected published parent to `Changes pending`. All affected parents must be `Queued` before a shared dependency can be promoted. The complete valid graph is written as a new immutable Blob object before the manifest pointer changes.
+Editing an External Piece or Publication Contents row moves every affected published parent to `Changes pending`. All affected parents must be `Queued` before a shared dependency can be promoted. The complete valid graph is written as a new immutable Blob object before the manifest pointer changes.
 
 ### A Rap Blog Contributors
 
 Retain the existing contributor model and begin with only `vestige`. Required fields are `Name`, `Slug`, `Role`, `Bio`, `Links JSON`, `Published`, `Sync State`, `Sync Error`, and `Last Synced At`.
 
-### A Rap Blog Newsletter Issues
+### A Rap Blog Monthly Newsletter Issues
 
 Properties: `Name`, unique `Coverage Month` (`YYYY-MM`), `Subject`, `Preview Text`, `Workflow State` (`Draft`, `Ready`, `Processing`, `Sent`, `Failed`), `Generated Content Hash`, `Kit Broadcast ID`, `Fallback Page ID`, and `Error`. Write the editor’s note in the page body.
 
@@ -66,6 +66,4 @@ Preview contexts return `403` before reading credentials or mutating Notion/Blob
 
 To retry a failed or missed issue event in production, POST `{"pageId":"…"}` to `/.netlify/functions/newsletter-recover` with `Authorization: Bearer $NEWSLETTER_RECOVERY_SECRET`. The same content hash and stored draft/fallback IDs preserve idempotency.
 
-## Rollback
-
-The manifest points to immutable version objects. Restoring a prior v1, v2, or v3 manifest target is supported. Do not delete the legacy article database or remove `NOTION_DATABASE_ID` until the schema-v3 pipeline, reconciliation, and rollback have passed in production.
+The legacy Articles database has been retired. The manifest still promotes immutable version objects, but the active editorial system uses only the five databases above.

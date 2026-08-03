@@ -45,7 +45,7 @@ webhook, reconciliation, activation, and recovery procedures.
 The version-three snapshot contains `publications`, `curatedPieces`, `contributors`, and sent
 `newsletterIssues`. `articles-json` is a deprecated compatibility view containing Essays and
 Listening Guides; `publications-json` exposes all four publication types; `editorial-json` returns
-the complete snapshot. All support ETags. Curated Pieces never become standalone RSS items.
+the complete snapshot. All support ETags. External Pieces never become standalone RSS items.
 
 The Deploy Preview snapshot intentionally contains no editorial fixtures. Launch content is added
 only through a reviewed, human-authored export or the production Notion graph.

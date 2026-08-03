@@ -13,7 +13,7 @@ export function isLiveEntryNotFoundError(error:unknown):boolean{return error ins
 export function createArticleRepository(options:{storage?:ContentStorage;localNotionPreview?:boolean}={}):ArticleRepository{
   if(!options.storage&&previewContentEnabled())return{async listArticles(){return(await getEditorialSnapshot()).publications;},async getArticleBySlug(slug){return(await getEditorialSnapshot()).publications.find((item)=>item.slug===slug);}};
   const storage=options.storage??createBlobContentStorage();
-  const local=options.localNotionPreview??(process.env.NODE_ENV==="development"&&Boolean(serverEnvironment("NOTION_API_KEY"))&&Boolean(serverEnvironment("NOTION_PUBLICATIONS_DATABASE_ID")||serverEnvironment("NOTION_DATABASE_ID")));
+  const local=options.localNotionPreview??(process.env.NODE_ENV==="development"&&Boolean(serverEnvironment("NOTION_API_KEY"))&&Boolean(serverEnvironment("NOTION_PUBLICATIONS_DATABASE_ID")));
   if(local){const notion=createNotionArticleSource(storage,{prewarmImages:true,persistImages:true});return{async listArticles(listOptions){return notion.previewArticles(listOptions?.includeDrafts??serverEnvironment("CONTENT_PREVIEW_DRAFTS")!=="false");},async getArticleBySlug(slug,getOptions){return(await notion.previewArticles(getOptions?.includeDrafts??true)).find((item)=>item.slug===slug);}};}
   return{async listArticles(){return(await readActiveEditorialSnapshot(storage)).editorial.publications;},async getArticleBySlug(slug){return(await readActiveEditorialSnapshot(storage)).editorial.publications.find((item)=>item.slug===slug);}};
 }

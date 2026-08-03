@@ -7,7 +7,7 @@ import type { ContentStorage } from "./storage";
 import { ContentError, type CuratedPiece, type EditorialSnapshot, type Publication, type SelectionReference } from "./types";
 
 const CURATED = { title:"Name", id:"ID", url:"Canonical URL", writer:"Writer", source:"Source Publication", date:"Original Date", topics:"Topics", annotation:"Annotation" } as const;
-const SELECTION = { parent:"Parent Publication", curated:"Curated Piece", publication:"Publication", order:"Order" } as const;
+const SELECTION = { parent:"Appears In", curated:"External Piece", publication:"Internal Publication", order:"Display Order" } as const;
 
 interface SelectionRow { parentPageId:string; order:number; selection:SelectionReference }
 
@@ -82,7 +82,7 @@ export class NotionEditorialGraphSource {
     const changed=new Set(next.curatedPieces.filter((item)=>contentHash(item)!==contentHash(oldCurated.get(item.id))).map((item)=>item.notionPageId));
     if(!changed.size)return;
     const pendingParents=[...rows.entries()].filter(([,items])=>items.some((item)=>item.selection.kind==="curatedPiece"&&changed.has(item.selection.reference))).map(([parent])=>parent).filter((parent)=>statusByPage.get(parent)?.published&&statusByPage.get(parent)?.syncState!=="Queued");
-    if(pendingParents.length)throw new ContentError(`Curated Piece changes require every affected published parent to be Queued: ${pendingParents.join(", ")}.`,"VALIDATION");
+    if(pendingParents.length)throw new ContentError(`External Piece changes require every affected published parent to be Queued: ${pendingParents.join(", ")}.`,"VALIDATION");
   }
 
   private parseSelections(pages:PageObjectResponse[]):Map<string,SelectionRow[]>{

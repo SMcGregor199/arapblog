@@ -168,8 +168,8 @@ function normalizeV2(value: LegacyEditorialSnapshot): EditorialSnapshot {
 
 function normalizeCuratedPiece(value: CuratedPiece): CuratedPiece {
   return {
-    notionPageId: requiredText(value.notionPageId, "Curated Piece Notion page ID"),
-    id: requiredSlug(value.id, "Curated Piece ID"), title: requiredText(value.title, "Curated Piece title"),
+    notionPageId: requiredText(value.notionPageId, "External Piece Notion page ID"),
+    id: requiredSlug(value.id, "External Piece ID"), title: requiredText(value.title, "External Piece title"),
     canonicalUrl: requiredUrl(value.canonicalUrl, "Canonical URL"), writer: requiredText(value.writer, "Writer"),
     sourcePublication: requiredText(value.sourcePublication, "Source publication"),
     originalDate: validDate(value.originalDate, "Original date"), topics: normalizedStrings(value.topics),
@@ -209,12 +209,12 @@ function assertPublicationGraph(publications: Publication[], curatedPieces: Cura
     if (publication.publicationType !== "Roundup" && publication.publicationType !== "Collection") continue;
     for (const selection of publication.selections) {
       selectionIds.push(selection.notionPageId);
-      if (publication.publicationType === "Roundup" && selection.kind !== "curatedPiece") throw new ContentError(`Roundup "${publication.slug}" may contain only Curated Pieces.`, "VALIDATION");
-      if (selection.kind === "curatedPiece" && !curatedIds.has(selection.reference)) throw new ContentError(`Publication "${publication.slug}" references missing Curated Piece "${selection.reference}".`, "VALIDATION");
+      if (publication.publicationType === "Roundup" && selection.kind !== "curatedPiece") throw new ContentError(`Roundup "${publication.slug}" may contain only External Pieces.`, "VALIDATION");
+      if (selection.kind === "curatedPiece" && !curatedIds.has(selection.reference)) throw new ContentError(`Publication "${publication.slug}" references missing External Piece "${selection.reference}".`, "VALIDATION");
       if (selection.kind === "publication") {
         const target = bySlug.get(selection.reference);
         if (!target) throw new ContentError(`Collection "${publication.slug}" references missing publication "${selection.reference}".`, "VALIDATION");
-        if (target.publicationType === "Roundup" || target.publicationType === "Collection") throw new ContentError(`Collection "${publication.slug}" may contain only Essays, Listening Guides, and Curated Pieces.`, "VALIDATION");
+        if (target.publicationType === "Roundup" || target.publicationType === "Collection") throw new ContentError(`Collection "${publication.slug}" may contain only Essays, Listening Guides, and External Pieces.`, "VALIDATION");
       }
     }
   }

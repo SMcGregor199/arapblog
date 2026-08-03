@@ -109,10 +109,7 @@ export class NotionArticleSource {
         notionVersion: "2025-09-03",
       });
     this.storage = options.storage;
-    this.databaseId = options.databaseId ?? requiredEnvironment(
-      "NOTION_PUBLICATIONS_DATABASE_ID",
-      "NOTION_DATABASE_ID",
-    );
+    this.databaseId = options.databaseId ?? requiredEnvironment("NOTION_PUBLICATIONS_DATABASE_ID");
     this.now = options.now ?? (() => new Date());
     this.prewarmImages = options.prewarmImages ?? true;
     this.persistImages = options.persistImages ?? true;
@@ -408,8 +405,8 @@ export function createNotionArticleSource(
   return new NotionArticleSource({ ...options, storage });
 }
 
-function requiredEnvironment(name: string, fallback?: string): string {
-  const value = serverEnvironment(name) || (fallback ? serverEnvironment(fallback) : undefined);
+function requiredEnvironment(name: string): string {
+  const value = serverEnvironment(name);
   if (!value) {
     throw new ContentError(`${name} is not configured.`, "CONFIGURATION");
   }

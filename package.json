@@ -13,8 +13,7 @@
     "lint": "ASTRO_TELEMETRY_DISABLED=1 astro check",
     "preview": "ASTRO_TELEMETRY_DISABLED=1 astro preview",
     "test": "vitest run",
-    "test:watch": "vitest",
-    "content:retire-legacy": "node scripts/retire-legacy-publications.mjs"
+    "test:watch": "vitest"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",

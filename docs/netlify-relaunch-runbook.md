@@ -14,26 +14,18 @@ Server-only: `NOTION_API_KEY`, `NOTION_PUBLICATIONS_DATABASE_ID`, `NOTION_CURATE
 
 Public: `PUBLIC_KIT_TIP_URL` and optional `PUBLIC_BOOKSHOP_STORE_URL`. Verify the Kit Tip page before setting the Tip URL and removing the Buy Me a Coffee fallback.
 
-## Immediate takedown (operator action)
+## Legacy status
 
-This requires production credentials and is deliberately not run from a preview branch.
-
-1. With production `NOTION_API_KEY` and `NOTION_DATABASE_ID` in the operator environment, run `npm run content:retire-legacy -- --confirm=retire-three-legacy-publications`. The guarded script selects exactly the three known slugs and makes no changes if any is missing.
-2. Verify the webhook promotes a snapshot with zero articles.
-3. Confirm the homepage and archives are `200`; confirm all three article URLs are unavailable and absent from JSON, RSS, and sitemap.
-4. The script trashes the three Notion pages only after every public check passes. If verification times out, it leaves them unarchived for recovery. Keep the now-empty legacy database.
-
-The relaunch code returns `410 Gone` for those three paths. Ordinary unknown `/articles/*` paths return `404`.
+The former Articles database and its three legacy pages were retired. The relaunch code returns `410 Gone` for those three paths; ordinary unknown `/articles/*` paths return `404`.
 
 ## One-deploy release
 
 1. Configure the new databases and production-only environment values while all records remain Draft.
-2. Review the exact PR #29 commit and its Deploy Preview; run tests, build, no-JavaScript route checks, accessibility checks, metadata checks, endpoint ETag/304 checks, and newsletter dry runs.
+2. Review the exact `dev` commit and its approved test deployment; run tests, build, no-JavaScript route checks, accessibility checks, metadata checks, endpoint ETag/304 checks, and newsletter dry runs.
 3. Confirm the launch inventory is exactly two Essays, two Listening Guides, four Roundups, and one Collection, all written or selected by the user.
 4. Build and publish the approved commit exactly once.
 5. Queue the reviewed Notion records afterward; publishing content requires no second site deployment.
 6. Test signup, the verified Kit Tip page, one unscheduled Kit draft or Notion fallback, and the manual `Sent` archive flow without sending an unintended email.
-7. Only after v3 reconciliation and rollback checks pass: remove `NOTION_DATABASE_ID` and trash the empty legacy database.
-8. After approval, fast-forward local `dev` to the exact reviewed PR commit.
+7. Keep the legacy database retired; do not reintroduce `NOTION_DATABASE_ID`.
 
-Do not publish, merge, push, send a broadcast, delete a database, or change production environment values without explicit operator approval.
+Do not publish, merge, send a broadcast, delete a database, or change production environment values without explicit operator approval.
