@@ -19,11 +19,15 @@ export async function serveArticlesJson(
   }
 
   try {
-    const articles = (await getEditorialSnapshot(storage)).originals;
+    const articles = (await getEditorialSnapshot(storage)).publications.filter(
+      (publication) => publication.publicationType === "Essay" || publication.publicationType === "Listening Guide",
+    );
     const etag = `"${contentHash(articles)}"`;
     const headers = {
       ...contentCacheHeaders(),
       "Content-Type": "application/json; charset=utf-8",
+      Deprecation: "true",
+      Link: '</.netlify/functions/publications-json>; rel="successor-version"',
       ETag: etag,
     };
     const conditionalEtags =

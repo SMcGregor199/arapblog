@@ -1,0 +1,7 @@
+---
+import PublicationArchive from "../../components/PublicationArchive.astro";
+import { getEditorialSnapshot, publicationsOfType } from "../../lib/content/editorial";
+export const prerender = false;
+const editorial = await getEditorialSnapshot();
+---
+<PublicationArchive type="Listening Guide" eyebrow="Opinionated listening paths" title="A way into the music." intro="Listening Guides are routes through an artist, scene, album, or idea. They give you a place to start, explain what to listen for, and leave enough open space to form your own relationship with the music." publications={publicationsOfType(editorial, "Listening Guide")} />

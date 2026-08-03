@@ -1,0 +1,7 @@
+---
+import PublicationArchive from "../../components/PublicationArchive.astro";
+import { getEditorialSnapshot, publicationsOfType } from "../../lib/content/editorial";
+export const prerender = false;
+const editorial = await getEditorialSnapshot();
+---
+<PublicationArchive type="Roundup" eyebrow="The weekly reading list" title="Worth leaving this site for." intro="Weekly, dated selections of rap writing with full credit, canonical links, and a note about why each piece is worth your time." publications={publicationsOfType(editorial, "Roundup")} />

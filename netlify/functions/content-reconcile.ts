@@ -3,12 +3,14 @@ import { rejectNonProductionMutation } from "../../src/lib/content/editorial";
 import { ContributorSynchronizer } from "../../src/lib/content/contributor-sync";
 import { NotionContributorSource } from "../../src/lib/content/notion-contributors";
 import { createNotionArticleSource } from "../../src/lib/content/notion";
+import { NotionEditorialGraphSource } from "../../src/lib/content/notion-graph";
+import { assertLaunchInventory } from "../../src/lib/content/launch";
 import { createBlobContentStorage } from "../../src/lib/content/storage";
-import { ContentSynchronizer } from "../../src/lib/content/sync";
 
 interface ReconcileRequest {
   dryRun?: boolean;
   rebuild?: boolean;
+  validateLaunchInventory?: boolean;
 }
 
 export default async function handler(request: Request): Promise<Response> {
@@ -35,8 +37,9 @@ export default async function handler(request: Request): Promise<Response> {
   if (
     (body.dryRun !== undefined && typeof body.dryRun !== "boolean") ||
     (body.rebuild !== undefined && typeof body.rebuild !== "boolean")
+    || (body.validateLaunchInventory !== undefined && typeof body.validateLaunchInventory !== "boolean")
   ) {
-    return new Response("dryRun and rebuild must be booleans", { status: 400 });
+    return new Response("dryRun, rebuild, and validateLaunchInventory must be booleans", { status: 400 });
   }
 
   const dryRun = body.dryRun ?? true;
@@ -46,13 +49,13 @@ export default async function handler(request: Request): Promise<Response> {
       persistImages: !dryRun,
       prewarmImages: !dryRun,
     });
-    const reconcileOptions = {
-      dryRun,
-      rebuild: body.rebuild ?? false,
-    };
-    const result = await new ContentSynchronizer(storage, notion).reconcile(
-      reconcileOptions,
-    );
+    const reconcileOptions = { dryRun, rebuild: body.rebuild ?? false };
+    const graph = new NotionEditorialGraphSource(storage, notion.notion);
+    const preview = await graph.buildGraph();
+    if (body.validateLaunchInventory) assertLaunchInventory(preview.editorial.publications);
+    const result = dryRun
+      ? { dryRun: true, rebuild: reconcileOptions.rebuild, publications: preview.editorial.publications.map((item) => ({ slug: item.slug, publicationType: item.publicationType })) }
+      : { dryRun: false, rebuild: reconcileOptions.rebuild, publications: (await graph.promote(preview)).publications.map((item) => ({ slug: item.slug, publicationType: item.publicationType })) };
     const contributors = await new ContributorSynchronizer(
       storage,
       new NotionContributorSource(notion.notion),

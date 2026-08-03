@@ -24,8 +24,8 @@ function pageFixture(id = "page-1"): PageObjectResponse {
       },
       Slug: richText("a-complete-guide"),
       Description: richText("A useful description."),
-      "Content Type": { type: "select", select: { name: "guide" } },
-      Tags: {
+      "Publication Type": { type: "select", select: { name: "Listening Guide" } },
+      Topics: {
         type: "multi_select",
         multi_select: [{ name: "Kendrick" }, { name: "listening path" }],
       },
@@ -58,8 +58,8 @@ describe("Notion article source", () => {
       title: "A Complete Guide",
       slug: "a-complete-guide",
       description: "A useful description.",
-      contentType: "Guide",
-      tags: ["Kendrick", "listening path"],
+      publicationType: "Listening Guide",
+      topics: ["Kendrick", "listening path"],
       heroLabel: "The route",
       heroAlt: "An abstract route across a record",
       accent: "lime",

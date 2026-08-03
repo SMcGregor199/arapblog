@@ -95,9 +95,9 @@ export function articleFixture(overrides: Partial<Article> = {}): Article {
     description: "A useful listening path.",
     publishedAt: "2026-07-30T12:00:00.000Z",
     updatedAt: "2026-07-30T12:00:00.000Z",
-    author: "vestige",
-    contentType: "Guide",
-    tags: ["rap"],
+    contributor: "vestige",
+    publicationType: "Listening Guide",
+    topics: ["rap"],
     heroLabel: "First path",
     heroAlt: "An abstract record",
     accent: "clay",
@@ -107,5 +107,5 @@ export function articleFixture(overrides: Partial<Article> = {}): Article {
     readTime: "1 min",
     bodyMarkdown: "A complete article body.",
     ...overrides,
-  };
+  } as Article;
 }

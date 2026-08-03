@@ -1,45 +1,39 @@
-# Netlify relaunch runbook
+# Relaunch runbook
 
-## Credit guardrail
+## Safety gates
 
-Keep Netlify auto-recharge disabled. Deploy Previews and branch deploys do not consume deployment
-credits; preview visits can still consume requests, bandwidth, and Function compute. The relaunch
-budget is approximately 15–18 credits: low single-digit review traffic plus exactly one 15-credit
-production publication. See Netlify’s
-[credit-based pricing reference](https://docs.netlify.com/manage/accounts-and-billing/billing/billing-for-credit-based-plans/credit-based-pricing-plans/).
+- Keep `main` and the current production deploy untouched while PR #29 is reviewed.
+- Lock the current published deploy before the release.
+- Keep Netlify auto-recharge disabled.
+- Never configure `CONTEXT=production` locally or in a Deploy Preview.
+- Preview mutation endpoints must return `403` and previews must use the empty code-backed snapshot unless a reviewed human-authored launch export is committed.
 
-There must be no second production publication in the relaunch billing cycle without explicit
-approval.
+## Production environment
 
-## Preview phase
+Server-only: `NOTION_API_KEY`, `NOTION_PUBLICATIONS_DATABASE_ID`, `NOTION_CURATED_PIECES_DATABASE_ID`, `NOTION_SELECTIONS_DATABASE_ID`, `NOTION_CONTRIBUTORS_DATABASE_ID`, `NOTION_NEWSLETTER_ISSUES_DATABASE_ID`, `NOTION_WEBHOOK_VERIFICATION_TOKEN`, `NOTION_NEWSLETTER_WEBHOOK_TOKEN`, `CONTENT_RECONCILE_SECRET`, `NEWSLETTER_RECOVERY_SECRET`, optional `KIT_API_KEY`, and optional `KIT_TEMPLATE_ID`.
 
-1. Keep `main` and the currently published production deploy untouched.
-2. Open three PRs from `relaunch/preview-v1`, `relaunch/preview-v2`, and
-   `relaunch/preview-v3`. Each branch contains the complete editorial foundation; the branches
-   differ only in their default visual variant.
-3. Keep all PRs open so their stable Deploy Preview URLs remain available.
-4. Confirm the preview context serves the code-backed version-two snapshot and returns `403` from
-   the Notion webhook, content reconciliation, image refresh, and background sync paths.
-5. Address feedback on the winning preview branch. Do not merge a separate foundation PR.
-6. Close and delete the two losing branches only after the winner is approved.
+Public: `PUBLIC_KIT_TIP_URL` and optional `PUBLIC_BOOKSHOP_STORE_URL`. Verify the Kit Tip page before setting the Tip URL and removing the Buy Me a Coffee fallback.
 
-## Pre-merge gate
+## Immediate takedown (operator action)
 
-- Configure the documented Notion original and contributor database fields.
-- Configure production-only environment variables and leave new Notion records unqueued.
-- Run `npm test` and `npm run build` on the exact reviewed commit.
-- Verify HTML without JavaScript, mobile and desktop layout, keyboard order, focus, headings,
-  contrast, outbound labeling, alt text, and reduced motion.
-- Verify canonical and Open Graph tags, Article and Collection JSON-LD, RSS, sitemap,
-  `articles-json`, `editorial-json`, ETags, `304`, and all three existing article URLs.
-- Lock the currently published Netlify deploy or stop automatic publishing before merge.
+This requires production credentials and is deliberately not run from a preview branch.
 
-## Single publication
+1. With production `NOTION_API_KEY` and `NOTION_DATABASE_ID` in the operator environment, run `npm run content:retire-legacy -- --confirm=retire-three-legacy-publications`. The guarded script selects exactly the three known slugs and makes no changes if any is missing.
+2. Verify the webhook promotes a snapshot with zero articles.
+3. Confirm the homepage and archives are `200`; confirm all three article URLs are unavailable and absent from JSON, RSS, and sitemap.
+4. The script trashes the three Notion pages only after every public check passes. If verification times out, it leaves them unarchived for recovery. Keep the now-empty legacy database.
 
-1. Merge the complete winning branch once.
-2. Let Netlify build the merged commit while the existing deploy remains published.
-3. Inspect that successful production deploy by its deploy URL.
-4. Publish that deploy exactly once.
-5. Queue the prepared Notion original records afterward. Webhook snapshot promotion changes Blob
-   content and does not create another site deployment.
-6. Record the release batch and remaining monthly allowance.
+The relaunch code returns `410 Gone` for those three paths. Ordinary unknown `/articles/*` paths return `404`.
+
+## One-deploy release
+
+1. Configure the new databases and production-only environment values while all records remain Draft.
+2. Review the exact PR #29 commit and its Deploy Preview; run tests, build, no-JavaScript route checks, accessibility checks, metadata checks, endpoint ETag/304 checks, and newsletter dry runs.
+3. Confirm the launch inventory is exactly two Essays, two Listening Guides, four Roundups, and one Collection, all written or selected by the user.
+4. Build and publish the approved commit exactly once.
+5. Queue the reviewed Notion records afterward; publishing content requires no second site deployment.
+6. Test signup, the verified Kit Tip page, one unscheduled Kit draft or Notion fallback, and the manual `Sent` archive flow without sending an unintended email.
+7. Only after v3 reconciliation and rollback checks pass: remove `NOTION_DATABASE_ID` and trash the empty legacy database.
+8. After approval, fast-forward local `dev` to the exact reviewed PR commit.
+
+Do not publish, merge, push, send a broadcast, delete a database, or change production environment values without explicit operator approval.

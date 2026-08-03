@@ -1,6 +1,7 @@
 import rss from "@astrojs/rss";
 import { site } from "../data/site";
 import { getEditorialSnapshot } from "../lib/content/editorial";
+import { publicationPath } from "../lib/content/editorial";
 
 export const prerender = false;
 
@@ -18,20 +19,12 @@ export async function GET(context: { site: URL }) {
     title: site.name,
     description: site.description,
     site: context.site,
-    items: [
-      ...editorial.originals.map((article) => ({
-        title: article.title,
-        description: article.description,
-        pubDate: new Date(article.publishedAt),
-        link: `/articles/${article.slug}`,
-      })),
-      ...editorial.collections.map((collection) => ({
-        title: collection.title,
-        description: collection.description,
-        pubDate: new Date(collection.publishedAt),
-        link: `/collections/${collection.slug}`,
-      })),
-    ].sort((left, right) => right.pubDate.valueOf() - left.pubDate.valueOf()),
+    items: editorial.publications.map((publication) => ({
+      title: publication.title,
+      description: publication.description,
+      pubDate: new Date(publication.publishedAt),
+      link: publicationPath(publication),
+    })).sort((left, right) => right.pubDate.valueOf() - left.pubDate.valueOf()),
   });
   response.headers.set(
     "Netlify-CDN-Cache-Control",

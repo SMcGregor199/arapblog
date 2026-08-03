@@ -9,8 +9,8 @@ import { serverEnvironment } from "./environment";
 import {
   calculateReadingTime,
   isArticleAccent,
-  normalizeContentType,
-  normalizeArticle,
+  normalizePublicationType,
+  normalizePublication,
   slugifyTitle,
 } from "./article";
 import {
@@ -25,9 +25,9 @@ import type { ContentStorage } from "./storage";
 import {
   ContentError,
   SYNC_STATES,
-  type Article,
+  type Publication,
   type ArticleAccent,
-  type ContentType,
+  type PublicationType,
   type SyncState,
 } from "./types";
 
@@ -35,9 +35,9 @@ export const NOTION_PROPERTIES = {
   title: "Name",
   slug: "Slug",
   description: "Description",
-  contentType: "Content Type",
+  publicationType: "Publication Type",
   contributor: "Contributor Slug",
-  tags: "Tags",
+  topics: "Topics",
   heroLabel: "Hero Label",
   heroAlt: "Hero Alt",
   accent: "Accent",
@@ -59,9 +59,9 @@ export interface NotionArticleMetadata {
   title: string;
   slug: string;
   description: string;
-  contentType: ContentType;
+  publicationType: PublicationType;
   contributor: string;
-  tags: string[];
+  topics: string[];
   heroLabel: string;
   heroAlt: string;
   accent: ArticleAccent;
@@ -109,8 +109,10 @@ export class NotionArticleSource {
         notionVersion: "2025-09-03",
       });
     this.storage = options.storage;
-    this.databaseId =
-      options.databaseId ?? requiredEnvironment("NOTION_DATABASE_ID");
+    this.databaseId = options.databaseId ?? requiredEnvironment(
+      "NOTION_PUBLICATIONS_DATABASE_ID",
+      "NOTION_DATABASE_ID",
+    );
     this.now = options.now ?? (() => new Date());
     this.prewarmImages = options.prewarmImages ?? true;
     this.persistImages = options.persistImages ?? true;
@@ -155,7 +157,7 @@ export class NotionArticleSource {
   parseMetadata(page: PageObjectResponse): NotionArticleMetadata {
     const properties = page.properties;
     const title = titleValue(properties[NOTION_PROPERTIES.title]);
-    const contentTypeValue = selectValue(properties[NOTION_PROPERTIES.contentType]);
+    const publicationTypeValue = selectValue(properties[NOTION_PROPERTIES.publicationType]);
     const accentValue = selectValue(properties[NOTION_PROPERTIES.accent]);
     const syncStateValue =
       selectValue(properties[NOTION_PROPERTIES.syncState]) || "Draft";
@@ -163,7 +165,7 @@ export class NotionArticleSource {
     if (!title) {
       throw new ContentError("Name is required.", "VALIDATION");
     }
-    const contentType = normalizeContentType(contentTypeValue);
+    const publicationType = normalizePublicationType(publicationTypeValue);
     if (!isArticleAccent(accentValue)) {
       throw new ContentError(
         `Accent must be one of: clay, lime, violet.`,
@@ -192,10 +194,10 @@ export class NotionArticleSource {
       title,
       slug: richTextValue(properties[NOTION_PROPERTIES.slug]),
       description,
-      contentType,
+      publicationType,
       contributor:
         richTextValue(properties[NOTION_PROPERTIES.contributor]) || "vestige",
-      tags: multiSelectValue(properties[NOTION_PROPERTIES.tags]),
+      topics: multiSelectValue(properties[NOTION_PROPERTIES.topics]),
       heroLabel,
       heroAlt,
       accent: accentValue,
@@ -232,7 +234,7 @@ export class NotionArticleSource {
   async articleFromPage(
     page: PageObjectResponse,
     options: { stableSlug?: string; publishedAt?: string } = {},
-  ): Promise<Article> {
+  ): Promise<Publication> {
     const metadata = this.parseMetadata(page);
     const requestedSlug = metadata.slug || slugifyTitle(metadata.title);
     const slug = options.stableSlug || requestedSlug;
@@ -253,16 +255,16 @@ export class NotionArticleSource {
       metadata.publicationDate ||
       this.now().toISOString();
 
-    return normalizeArticle({
+    return normalizePublication({
       notionPageId: page.id,
       slug,
       title: metadata.title,
       description: metadata.description,
       publishedAt,
       updatedAt: this.now().toISOString(),
-      author: metadata.contributor,
-      contentType: metadata.contentType,
-      tags: metadata.tags,
+      contributor: metadata.contributor,
+      publicationType: metadata.publicationType,
+      topics: metadata.topics,
       heroLabel: metadata.heroLabel,
       heroAlt: metadata.heroAlt,
       accent: metadata.accent,
@@ -283,11 +285,14 @@ export class NotionArticleSource {
           }
         : {}),
       ...readingTime,
+      ...((metadata.publicationType === "Roundup" || metadata.publicationType === "Collection")
+        ? { selections: [] }
+        : {}),
       bodyMarkdown,
-    });
+    } as Publication);
   }
 
-  async previewArticles(includeDrafts = true): Promise<Article[]> {
+  async previewArticles(includeDrafts = true): Promise<Publication[]> {
     const pages = await this.queryPages();
     const selected = includeDrafts
       ? pages
@@ -309,7 +314,7 @@ export class NotionArticleSource {
     });
   }
 
-  async markPublished(article: Article): Promise<void> {
+  async markPublished(article: Publication): Promise<void> {
     await this.updateProperties(article.notionPageId, {
       [NOTION_PROPERTIES.slug]: richTextProperty(article.slug),
       [NOTION_PROPERTIES.published]: { checkbox: true },
@@ -403,8 +408,8 @@ export function createNotionArticleSource(
   return new NotionArticleSource({ ...options, storage });
 }
 
-function requiredEnvironment(name: string): string {
-  const value = serverEnvironment(name);
+function requiredEnvironment(name: string, fallback?: string): string {
+  const value = serverEnvironment(name) || (fallback ? serverEnvironment(fallback) : undefined);
   if (!value) {
     throw new ContentError(`${name} is not configured.`, "CONFIGURATION");
   }

@@ -1,45 +1,6 @@
 ---
-import { getLiveCollection } from "astro:content";
-import ArticleCard from "../../components/ArticleCard.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
-
 export const prerender = false;
-
-const result = await getLiveCollection("articles");
-const articles = (result.entries ?? []).map((entry) => entry.data);
-if (result.error) Astro.response.status = 503;
-Astro.response.headers.set(
-  "Netlify-CDN-Cache-Control",
-  "public, s-maxage=30, stale-while-revalidate=120, durable",
-);
+Astro.response.status = 404;
 ---
-
-<BaseLayout
-  title="Stories"
-  description="Original criticism, essays, interviews, histories, reported features, guides, and news analysis from A Rap Blog."
->
-  <header class="page-hero">
-    <div class="shell">
-      <p class="eyebrow">Original work</p>
-      <h1>Stories with a point of view.</h1>
-      <p>
-        Criticism, essays, interviews, histories, reported features, guides, and selective news
-        analysis—published when there is something worth saying.
-      </p>
-    </div>
-  </header>
-  <section class="content-section">
-    <div class="shell">
-      <div class="card-grid">
-        {articles.map((article) => <ArticleCard article={article} />)}
-      </div>
-      {
-        result.error && (
-          <p role="status">
-            Stories are temporarily unavailable. Please try again shortly.
-          </p>
-        )
-      }
-    </div>
-  </section>
-</BaseLayout>
+<BaseLayout title="Page not found"><section class="page-hero"><div class="shell"><p class="eyebrow">404</p><h1>Stories have a new home.</h1><p>Browse <a href="/essays">Essays</a> or <a href="/listening-guides">Listening Guides</a>.</p></div></section></BaseLayout>

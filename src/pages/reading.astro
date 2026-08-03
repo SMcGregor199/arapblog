@@ -1,37 +1,6 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import CuratedLinkCard from "../components/CuratedLinkCard.astro";
-import { getEditorialSnapshot } from "../lib/content/editorial";
-
 export const prerender = false;
-const editorial = await getEditorialSnapshot();
-Astro.response.headers.set("Netlify-CDN-Cache-Control", "public, s-maxage=30, stale-while-revalidate=120, durable");
+Astro.response.status=404;
 ---
-
-<BaseLayout title="Reading" description="Carefully selected rap writing from publications beyond A Rap Blog, with an editor’s note on why each piece is worth your time.">
-  <header class="page-hero reading-hero">
-    <div class="shell">
-      <p class="eyebrow">Curated elsewhere</p>
-      <h1>Reading worth leaving for.</h1>
-      <p>Every link goes to its original publication. We tell you who wrote it, where it appeared, and why it belongs here before you go.</p>
-    </div>
-  </header>
-  <section class="content-section">
-    <div class="shell archive-reading-layout">
-      <aside>
-        <p class="kicker">Selection policy</p>
-        <p>Strong reporting, criticism, history, and conversation. No pay-for-placement and no attempt to reproduce another writer’s work.</p>
-      </aside>
-      <div class="reading-list">
-        {editorial.curatedLinks.map((item, index) => <CuratedLinkCard item={item} index={index} />)}
-      </div>
-    </div>
-  </section>
-</BaseLayout>
-
-<style>
-  .archive-reading-layout { display: grid; grid-template-columns: 220px minmax(0, 800px); justify-content: center; gap: clamp(2rem, 7vw, 7rem); }
-  aside { align-self: start; padding-top: 1rem; border-top: 4px solid var(--clay); color: var(--ink-soft); font-size: .88rem; }
-  aside p + p { margin-top: .8rem; }
-  @media (max-width: 760px) { .archive-reading-layout { grid-template-columns: 1fr; } }
-</style>
+<BaseLayout title="Page not found"><section class="page-hero"><div class="shell"><p class="eyebrow">404</p><h1>Reading now lives in Roundups.</h1><p><a href="/roundups">Browse Roundups.</a></p></div></section></BaseLayout>

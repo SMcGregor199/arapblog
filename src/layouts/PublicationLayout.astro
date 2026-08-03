@@ -1,0 +1,33 @@
+---
+import BaseLayout from "./BaseLayout.astro";
+import ArticleBody from "../components/ArticleBody";
+import NewsletterBand from "../components/NewsletterBand.astro";
+import SupportCard from "../components/SupportCard.astro";
+import { publicationPath } from "../lib/content/editorial";
+import { site } from "../data/site";
+import type { EssayPublication, ListeningGuidePublication } from "../lib/content/types";
+interface Props { publication: EssayPublication | ListeningGuidePublication }
+const { publication } = Astro.props;
+const publishedAt = new Date(publication.publishedAt);
+const updatedAt = new Date(publication.updatedAt);
+const date = publishedAt.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
+const jsonLd = { "@context": "https://schema.org", "@type": "Article", headline: publication.title, description: publication.description, datePublished: publication.publishedAt, dateModified: publication.updatedAt, author: { "@type": "Person", name: publication.contributor, url: `${site.url}/contributors/${publication.contributor}` }, publisher: { "@type": "Organization", name: site.name, url: site.url }, mainEntityOfPage: `${site.url}${publicationPath(publication)}` };
+---
+<BaseLayout title={publication.title} description={publication.description} type="article" publishedAt={publishedAt} updatedAt={updatedAt}>
+  <script is:inline slot="head" type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  <article>
+    <header class="article-hero"><div class="shell article-hero-grid">
+      <div class="article-intro"><div class="article-meta"><span>{publication.publicationType}</span><time datetime={publication.publishedAt}>{date}</time><span>{publication.readTime}</span></div><h1>{publication.title}</h1><p>{publication.description}</p><p class="byline">By <a href={`/contributors/${publication.contributor}`}>{publication.contributor}</a></p></div>
+      {publication.heroImage ? <figure class="article-hero-image"><img src={publication.heroImage.src} alt={publication.heroImage.alt} width="820" height="820" />{publication.heroImage.credit && <figcaption>{publication.heroImage.creditUrl ? <a href={publication.heroImage.creditUrl} rel="external">{publication.heroImage.credit}</a> : publication.heroImage.credit}</figcaption>}</figure> : <div class="hero-record" data-accent={publication.accent} role="img" aria-label={publication.heroAlt}><span>{publication.heroLabel}</span></div>}
+    </div></header>
+    <div class="shell article-grid"><aside class="article-rail"><p class="kicker">Editorial standard</p><p>A clear argument, honest sourcing, and enough room for the music to remain complicated.</p></aside><div class="prose">
+      {publication.hasAffiliateLinks && <p class="affiliate-note">This publication contains clearly labeled Bookshop affiliate links. A Rap Blog may earn a commission at no extra cost to you.</p>}
+      <ArticleBody bodyMarkdown={publication.bodyMarkdown} hasAffiliateLinks={publication.hasAffiliateLinks} />
+      <SupportCard />
+    </div></div>
+  </article><NewsletterBand />
+</BaseLayout>
+
+<style>
+  .article-hero{padding-block:clamp(3.5rem,8vw,7rem);border-bottom:1px solid var(--line)}.article-hero-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(300px,.75fr);align-items:center;gap:clamp(2rem,6vw,6rem)}.article-meta{display:flex;flex-wrap:wrap;gap:.5rem 1.2rem;font-family:var(--mono);font-size:.7rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase}.article-intro h1{max-width:13ch;margin-top:1.5rem;font-size:clamp(3rem,7.5vw,6.7rem)}.article-intro>p:not(.byline){max-width:48ch;margin-top:1.5rem;color:var(--ink-soft);font-size:1.15rem}.byline{margin-top:2rem;font-size:.78rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.hero-record{position:relative;display:grid;overflow:hidden;width:min(100%,410px);aspect-ratio:1;place-items:center;border:1px solid var(--ink);border-radius:50%;background:repeating-radial-gradient(circle,transparent 0 14px,rgba(23,19,15,.4) 15px 17px),var(--clay);box-shadow:12px 12px 0 var(--ink)}.hero-record[data-accent="lime"]{background-color:var(--lime)}.hero-record[data-accent="violet"]{background-color:var(--violet)}.hero-record span{z-index:1;max-width:14ch;padding:.7rem;background:var(--paper);font-family:var(--mono);font-size:.7rem;text-align:center;text-transform:uppercase}.article-hero-image{margin:0}.article-hero-image img{width:min(100%,410px);aspect-ratio:1;object-fit:cover;border:1px solid var(--line-strong);box-shadow:12px 12px 0 var(--ink)}.article-grid{display:grid;grid-template-columns:180px minmax(0,720px);justify-content:center;gap:clamp(2rem,7vw,7rem);padding-block:clamp(4rem,9vw,8rem)}.article-rail{align-self:start;padding-top:1rem;border-top:4px solid var(--clay);color:var(--ink-soft);font-size:.82rem}.article-rail p+p{margin-top:.7rem}.affiliate-note{padding:1rem;border:1px solid var(--line);font-size:.9rem}@media(max-width:760px){.article-hero-grid,.article-grid{grid-template-columns:1fr}.article-rail{display:none}}
+</style>

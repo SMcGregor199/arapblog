@@ -1,24 +1,22 @@
 ---
 import { site } from "../data/site";
+const supportEvent = import.meta.env.PUBLIC_KIT_TIP_URL ? "Kit tip click" : "Buy Me a Coffee click";
 ---
 
 <aside class="support-card" aria-labelledby="support-heading">
   <div>
-    <p class="kicker">Reader support</p>
-    <h2 id="support-heading">Help keep the work independent.</h2>
-    <p>
-      A small contribution helps cover the publication’s basic costs. It never changes what gets
-      covered or recommended.
-    </p>
+    <p class="kicker">Reader-supported</p>
+    <h2 id="support-heading">Support A Rap Blog.</h2>
+    <p>Tips help cover the domain and basic publishing costs.</p>
   </div>
   {
     <a
       class="button button--light"
       href={site.supportUrl}
       rel="external nofollow sponsored"
-      data-umami-event="Buy Me a Coffee click"
+      data-umami-event={supportEvent}
     >
-      Buy me a coffee
+      Leave a tip
     </a>
   }
 </aside>

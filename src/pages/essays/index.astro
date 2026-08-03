@@ -1,0 +1,7 @@
+---
+import PublicationArchive from "../../components/PublicationArchive.astro";
+import { getEditorialSnapshot, publicationsOfType } from "../../lib/content/editorial";
+export const prerender = false;
+const editorial = await getEditorialSnapshot();
+---
+<PublicationArchive type="Essay" eyebrow="Arguments & criticism" title="Essays with a point of view." intro="Long-form criticism, history, and argument about rap, published when there is something worth saying." publications={publicationsOfType(editorial, "Essay")} />

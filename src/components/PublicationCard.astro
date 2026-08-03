@@ -1,0 +1,20 @@
+---
+import { publicationPath } from "../lib/content/editorial";
+import type { Publication } from "../lib/content/types";
+interface Props { publication: Publication }
+const { publication } = Astro.props;
+const href = publicationPath(publication);
+const date = new Date(publication.publishedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
+---
+<article class="article-card publication-card">
+  <a class="card-art" data-accent={publication.accent} href={href} aria-label={`Read ${publication.title}`}>
+    <span>{publication.heroLabel}</span>
+  </a>
+  <div class="card-body">
+    <div class="card-meta"><span>{publication.publicationType}</span><time datetime={publication.publishedAt}>{date}</time></div>
+    <h3><a href={href}>{publication.title}</a></h3>
+    <p>{publication.description}</p>
+    <p class="card-byline">By <a href={`/contributors/${publication.contributor}`}>{publication.contributor}</a></p>
+    <a class="card-link" href={href}>Read {publication.publicationType.toLowerCase()}</a>
+  </div>
+</article>

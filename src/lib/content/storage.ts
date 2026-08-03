@@ -5,6 +5,7 @@ export const CONTENT_STORE_NAME = "content";
 export const IMAGE_STORE_NAME = "images";
 export const ARTICLE_MANIFEST_KEY = "content/articles/manifest.json";
 export const ARTICLE_VERSION_PREFIX = "content/articles/versions";
+export const NEWSLETTER_EVENT_PREFIX = "content/newsletter";
 export const ARTICLE_EVENT_PREFIX = "content/articles/events";
 export const CONTRIBUTOR_EVENT_PREFIX = "content/contributors/events";
 export const IMAGE_SOURCE_PREFIX = "content/articles/image-sources";

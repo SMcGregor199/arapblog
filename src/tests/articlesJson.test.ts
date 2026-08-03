@@ -15,6 +15,7 @@ describe("articles JSON", () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject([{ slug: "first-path" }]);
     expect(response.headers.get("etag")).toMatch(/^"[a-f0-9]{64}"$/);
+    expect(response.headers.get("deprecation")).toBe("true");
     expect(response.headers.get("netlify-cdn-cache-control")).toContain(
       "stale-while-revalidate=120",
     );

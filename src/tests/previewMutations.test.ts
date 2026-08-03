@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import reconcile from "../../netlify/functions/content-reconcile";
 import notionImage from "../../netlify/functions/notion-image";
 import backgroundSync from "../../netlify/functions/notion-content-sync";
+import newsletterRecovery from "../../netlify/functions/newsletter-recover";
+import newsletterWebhook from "../../netlify/functions/newsletter-webhook";
 
 beforeEach(() => {
   process.env.CONTEXT = "deploy-preview";
@@ -43,5 +45,25 @@ describe("preview mutation isolation", () => {
     expect(error).toHaveBeenCalledWith(
       "Rejected non-production Notion synchronization request",
     );
+  });
+
+  it("rejects newsletter recovery before reading credentials", async () => {
+    const response = await newsletterRecovery(
+      new Request("https://preview.example/.netlify/functions/newsletter-recover", {
+        method: "POST",
+        body: JSON.stringify({ pageId: "issue" }),
+      }),
+    );
+    expect(response.status).toBe(403);
+  });
+
+  it("rejects newsletter webhooks outside production", async () => {
+    const response = await newsletterWebhook(
+      new Request("https://preview.example/.netlify/functions/newsletter-webhook", {
+        method: "POST",
+        body: JSON.stringify({ verification_token: "token" }),
+      }),
+    );
+    expect(response.status).toBe(403);
   });
 });

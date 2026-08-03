@@ -6,7 +6,7 @@ import { editorialSlug } from "../../lib/editorial-routing";
 export const prerender = false;
 const editorial = await getEditorialSnapshot();
 const counts = new Map<string, { name: string; count: number }>();
-for (const topic of [...editorial.originals.flatMap((item) => item.tags), ...editorial.curatedLinks.flatMap((item) => item.topics)]) {
+for (const topic of [...editorial.publications.flatMap((item) => item.topics), ...editorial.curatedPieces.flatMap((item) => item.topics)]) {
   const slug = editorialSlug(topic);
   const current = counts.get(slug);
   counts.set(slug, { name: current?.name ?? topic, count: (current?.count ?? 0) + 1 });
@@ -14,7 +14,7 @@ for (const topic of [...editorial.originals.flatMap((item) => item.tags), ...edi
 const topics = [...counts.entries()].sort((a, b) => b[1].count - a[1].count || a[1].name.localeCompare(b[1].name));
 ---
 
-<BaseLayout title="Topics" description="Browse A Rap Blog’s original stories and selected reading by subject, scene, artist, and form.">
+<BaseLayout title="Topics" description="Browse A Rap Blog publications and selected outside work by subject, scene, artist, and form.">
   <header class="page-hero"><div class="shell"><p class="eyebrow">Follow a thread</p><h1>Topics</h1><p>Move across originals and outside reading without losing the subject that brought you in.</p></div></header>
   <section class="content-section"><div class="shell"><ul class="topic-index">
     {topics.map(([slug, topic]) => <li><a href={`/topics/${slug}`}><span>{topic.name}</span><small>{topic.count} {topic.count === 1 ? "piece" : "pieces"}</small></a></li>)}

@@ -4,16 +4,17 @@ import remarkGfm from "remark-gfm";
 
 interface ArticleBodyProps {
   bodyMarkdown: string;
+  hasAffiliateLinks?: boolean;
 }
 
-export default function ArticleBody({ bodyMarkdown }: ArticleBodyProps) {
+export default function ArticleBody({ bodyMarkdown, hasAffiliateLinks = false }: ArticleBodyProps) {
   return (
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
       skipHtml
       urlTransform={safeMarkdownUrl}
       components={{
-        a: SafeLink,
+        a: (props) => <SafeLink {...props} labelAffiliateClicks={hasAffiliateLinks} />,
         img: SafeImage,
       }}
     >
@@ -56,18 +57,30 @@ export function safeMarkdownUrl(
 function SafeLink({
   href = "",
   children,
+  labelAffiliateClicks = false,
   ...props
-}: ComponentPropsWithoutRef<"a">) {
+}: ComponentPropsWithoutRef<"a"> & { labelAffiliateClicks?: boolean }) {
   const isExternal = /^https?:\/\//i.test(href);
+  const isBookshopAffiliate = labelAffiliateClicks && isBookshopUrl(href);
   return (
     <a
       {...props}
       href={href}
-      rel={isExternal ? "noopener noreferrer" : undefined}
+      rel={isBookshopAffiliate ? "external nofollow sponsored" : isExternal ? "noopener noreferrer" : undefined}
+      data-umami-event={isBookshopAffiliate ? "Bookshop affiliate click" : undefined}
     >
       {children}
     </a>
   );
+}
+
+function isBookshopUrl(value: string): boolean {
+  try {
+    const hostname = new URL(value).hostname.toLowerCase();
+    return hostname === "bookshop.org" || hostname.endsWith(".bookshop.org");
+  } catch {
+    return false;
+  }
 }
 
 function SafeImage({

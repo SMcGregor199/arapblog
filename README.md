@@ -1,7 +1,7 @@
 # A Rap Blog
 
-An Astro publication for original rap criticism and carefully selected outside writing. Static
-pages are prerendered; editorial routes are rendered on demand from an atomic version-two
+An Astro publication built around Essays, Roundups, Collections, and Listening Guides. Editorial
+routes are rendered on demand from an atomic version-three
 Netlify Blob snapshot. Deploy Previews use a code-backed snapshot and cannot mutate Notion or
 Blobs.
 
@@ -26,7 +26,7 @@ npm run build
 `site.prelaunch` in `src/data/site.ts` controls site-wide crawler protection. It is currently
 disabled. Re-enable it only for an intentionally private staging publication.
 
-## Publishing an article
+## Publishing
 
 Notion is the canonical editorial source. A signed Notion webhook promotes only revisions whose
 `Sync State` is `Queued`; ordinary edits to a published page become `Changes pending` and leave
@@ -42,13 +42,13 @@ Publishing, updating, and unpublishing do not trigger a Netlify deployment. See
 [`docs/notion-publishing.md`](docs/notion-publishing.md) for the database template, connection,
 webhook, reconciliation, activation, and recovery procedures.
 
-The version-two snapshot contains `originals`, `curatedLinks`, `collections`, and `contributors`.
-`articles-json` remains backward-compatible by returning only originals; `editorial-json` returns
-the complete snapshot with ETag support. Curated links always lead to their canonical publication
-and remain out of RSS as individual items; originals and collections are included.
+The version-three snapshot contains `publications`, `curatedPieces`, `contributors`, and sent
+`newsletterIssues`. `articles-json` is a deprecated compatibility view containing Essays and
+Listening Guides; `publications-json` exposes all four publication types; `editorial-json` returns
+the complete snapshot. All support ETags. Curated Pieces never become standalone RSS items.
 
-The three launch guides are preserved verbatim in the generated preview snapshot with their
-existing slugs and publication dates. Production continues to read the atomic Blob snapshot.
+The Deploy Preview snapshot intentionally contains no editorial fixtures. Launch content is added
+only through a reviewed, human-authored export or the production Notion graph.
 
 ## Brand configuration
 
@@ -59,13 +59,18 @@ The site name, pen name, contact email, support URL, and primary description liv
 
 Copy `.env.example` to `.env` for local testing. Configure the public value in Netlify:
 
-- `PUBLIC_BOOKSHOP_STORE_URL` — the approved Bookshop.org affiliate storefront URL.
+- `PUBLIC_KIT_TIP_URL` — the verified `Support A Rap Blog` Kit Tip page.
+- `PUBLIC_BOOKSHOP_STORE_URL` — an optional approved Bookshop.org affiliate storefront URL.
 
-Configure the five server-only content values in Netlify:
+Configure the server-only values listed in `.env.example`, including the five Notion database IDs,
+webhook secrets, reconciliation secret, and optional Kit v4 credentials.
 
 - `NOTION_API_KEY`
-- `NOTION_DATABASE_ID`
+- `NOTION_PUBLICATIONS_DATABASE_ID`
+- `NOTION_CURATED_PIECES_DATABASE_ID`
+- `NOTION_SELECTIONS_DATABASE_ID`
 - `NOTION_CONTRIBUTORS_DATABASE_ID`
+- `NOTION_NEWSLETTER_ISSUES_DATABASE_ID`
 - `NOTION_WEBHOOK_VERIFICATION_TOKEN`
 - `CONTENT_RECONCILE_SECRET`
 

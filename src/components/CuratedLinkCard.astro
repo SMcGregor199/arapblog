@@ -1,40 +1,16 @@
 ---
-import type { CuratedLink } from "../lib/content/types";
-
-interface Props {
-  item: CuratedLink;
-  index?: number;
-}
-
+import type { CuratedPiece } from "../lib/content/types";
+interface Props { item: CuratedPiece; index?: number }
 const { item, index } = Astro.props;
-const publishedAt = new Date(item.publishedAt);
-const date = publishedAt.toLocaleDateString("en-US", {
-  month: "short",
-  day: "numeric",
-  year: "numeric",
-  timeZone: "UTC",
-});
+const date = new Date(item.originalDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
 ---
-
 <article class="reading-item">
   {index !== undefined && <span class="reading-number" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>}
   <div class="reading-main">
-    <p class="reading-source">
-      <span>{item.publication}</span>
-      <time datetime={publishedAt.toISOString()}>{date}</time>
-    </p>
-    <h3>
-      <a href={item.canonicalUrl} rel="external">
-        {item.title}<span class="sr-only"> (opens at {item.publication})</span>
-        <span class="outbound" aria-hidden="true">↗</span>
-      </a>
-    </h3>
+    <p class="reading-source"><span>{item.sourcePublication}</span><time datetime={item.originalDate}>{date}</time></p>
+    <h3><a href={item.canonicalUrl} rel="external">{item.title}<span class="sr-only"> (external link at {item.sourcePublication})</span><span class="outbound" aria-hidden="true">↗</span></a></h3>
     <p class="reading-byline">By {item.writer}</p>
-    <p class="reading-note">{item.editorialNote}</p>
-    <ul class="topic-list" aria-label="Topics">
-      {item.topics.map((topic) => (
-        <li><a href={`/topics/${topic.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}>{topic}</a></li>
-      ))}
-    </ul>
+    <p class="reading-note">{item.annotation}</p>
+    <ul class="topic-list" aria-label="Topics">{item.topics.map((topic) => <li><a href={`/topics/${topic.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}>{topic}</a></li>)}</ul>
   </div>
 </article>
