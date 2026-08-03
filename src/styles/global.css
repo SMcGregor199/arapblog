@@ -111,7 +111,7 @@
     list-style: none;
   }
 
-  .topic-list a {
+  .topic-list span {
     display: block;
     padding: 0.3rem 0.55rem;
     border: 1px solid var(--line);
@@ -293,8 +293,6 @@
   }
 
   body[data-design="3"] .reading-item,
-  body[data-design="3"] .topic-cloud a,
-  body[data-design="3"] .topic-list a,
   body[data-design="3"] .card-art,
   body[data-design="3"] .button {
     transition-duration: 220ms;

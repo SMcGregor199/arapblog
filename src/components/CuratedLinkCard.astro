@@ -11,6 +11,6 @@ const date = new Date(item.originalDate).toLocaleDateString("en-US", { month: "s
     <h3><a href={item.canonicalUrl} rel="external">{item.title}<span class="sr-only"> (external link at {item.sourcePublication})</span><span class="outbound" aria-hidden="true">↗</span></a></h3>
     <p class="reading-byline">By {item.writer}</p>
     <p class="reading-note">{item.annotation}</p>
-    <ul class="topic-list" aria-label="Topics">{item.topics.map((topic) => <li><a href={`/topics/${topic.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}>{topic}</a></li>)}</ul>
+    <ul class="topic-list" aria-label="Topics">{item.topics.map((topic) => <li><span>{topic}</span></li>)}</ul>
   </div>
 </article>
