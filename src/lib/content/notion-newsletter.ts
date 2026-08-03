@@ -1,4 +1,4 @@
-import { Client, isFullPage, type UpdatePageParameters } from "@notionhq/client";
+import { Client, isFullPage, type PageObjectResponse, type UpdatePageParameters } from "@notionhq/client";
 import { NotionToMarkdown } from "notion-to-md";
 import { serverEnvironment } from "./environment";
 import { KitAccessUnavailableError, type NewsletterIssueDraft, type NewsletterIssueSource, type KitDraftClient } from "./newsletter";
@@ -8,8 +8,13 @@ const P={name:"Name",month:"Coverage Month",subject:"Subject",preview:"Preview T
 
 export class NotionNewsletterIssueSource implements NewsletterIssueSource {
   readonly notion:Client;
+  private dataSourceId?:string;
   private readonly databaseId:string;
   constructor(notion?:Client,databaseId=required("NOTION_NEWSLETTER_ISSUES_DATABASE_ID")){this.notion=notion??new Client({auth:required("NOTION_API_KEY"),notionVersion:"2025-09-03"});this.databaseId=databaseId;}
+  async belongsToDatabase(page:PageObjectResponse):Promise<boolean>{
+    const parent=record(page.parent);const actual=String(parent.data_source_id??parent.database_id??parent.id??"").replaceAll("-","").toLowerCase();
+    return actual===String(await this.resolveDataSourceId()).replaceAll("-","").toLowerCase();
+  }
   async readIssue(pageId:string):Promise<NewsletterIssueDraft>{
     const page=await this.notion.pages.retrieve({page_id:pageId});if(!isFullPage(page))throw new ContentError("Newsletter Issue could not be retrieved.","NOT_FOUND");
     const state=select(page.properties[P.state]) as NewsletterState;if(!NEWSLETTER_STATES.includes(state))throw new ContentError("Newsletter Workflow State is invalid.","VALIDATION");
@@ -25,8 +30,14 @@ export class NotionNewsletterIssueSource implements NewsletterIssueSource {
     const created=await this.notion.pages.create({parent:{type:"page_id",page_id:pageId},properties:{title:{type:"title",title:[{type:"text",text:{content:"Copy-ready email"}}]}},children:chunks});return created.id;
   }
   private async update(pageId:string,properties:Record<string,unknown>):Promise<void>{await this.notion.pages.update({page_id:pageId,properties:properties as UpdatePageParameters["properties"]});}
+  private async resolveDataSourceId():Promise<string>{
+    if(this.dataSourceId)return this.dataSourceId;
+    let dataSourceId=this.databaseId.replace(/^collection:\/\//,"");
+    try{const database=await this.notion.databases.retrieve({database_id:dataSourceId}) as unknown as {data_sources?:Array<{id:string}>};dataSourceId=database.data_sources?.[0]?.id??dataSourceId;}catch{}
+    this.dataSourceId=dataSourceId;return dataSourceId;
+  }
   private async assertUniqueCoverageMonth(month:string,pageId:string):Promise<void>{
-    let dataSourceId=this.databaseId.replace(/^collection:\/\//,"");try{const database=await this.notion.databases.retrieve({database_id:dataSourceId}) as unknown as {data_sources?:Array<{id:string}>};dataSourceId=database.data_sources?.[0]?.id??dataSourceId;}catch{}
+    const dataSourceId=await this.resolveDataSourceId();
     let cursor:string|undefined;const matching:string[]=[];do{const response=await this.notion.dataSources.query({data_source_id:dataSourceId,page_size:100,start_cursor:cursor});for(const item of response.results){if(isFullPage(item)&&rich(item.properties[P.month])===month)matching.push(item.id);}cursor=response.has_more?(response.next_cursor??undefined):undefined;}while(cursor);
     if(matching.some((id)=>id!==pageId))throw new ContentError(`Coverage Month ${month} is used by more than one Newsletter Issue.`,"VALIDATION");
   }

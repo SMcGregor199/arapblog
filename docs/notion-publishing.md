@@ -64,6 +64,8 @@ Create one issue for the previous calendar month in `America/New_York`. `Ready` 
 
 Preview contexts return `403` before reading credentials or mutating Notion/Blobs. The code-backed preview contains no editorial fixtures until an approved launch export is intentionally added.
 
+One Notion connection receives every editorial event. Give it access to all five databases, then subscribe it to `/.netlify/functions/notion-content-webhook`; that handler routes Newsletter Issue pages internally. During Notion's one-time verification delivery, copy the token from the production function log into `NOTION_WEBHOOK_VERIFICATION_TOKEN`, then verify the subscription in Notion.
+
 To retry a failed or missed issue event in production, POST `{"pageId":"…"}` to `/.netlify/functions/newsletter-recover` with `Authorization: Bearer $NEWSLETTER_RECOVERY_SECRET`. The same content hash and stored draft/fallback IDs preserve idempotency.
 
 The legacy Articles database has been retired. The manifest still promotes immutable version objects, but the active editorial system uses only the five databases above.

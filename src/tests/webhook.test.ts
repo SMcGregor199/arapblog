@@ -62,7 +62,7 @@ describe("Notion webhook signatures", () => {
     );
   });
 
-  it("acknowledges the one-time verification delivery without queueing or logging", async () => {
+  it("acknowledges the one-time verification delivery, logs its token, and does not queue", async () => {
     const fetchMock = vi.fn();
     const infoMock = vi.spyOn(console, "info").mockImplementation(() => undefined);
     vi.stubGlobal("fetch", fetchMock);
@@ -78,7 +78,10 @@ describe("Notion webhook signatures", () => {
 
     expect(response.status).toBe(200);
     expect(fetchMock).not.toHaveBeenCalled();
-    expect(infoMock).not.toHaveBeenCalled();
+    expect(infoMock).toHaveBeenCalledWith(
+      expect.stringContaining("verification token received"),
+      { verificationToken: "one-time-token" },
+    );
     infoMock.mockRestore();
   });
 

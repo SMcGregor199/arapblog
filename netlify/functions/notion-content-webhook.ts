@@ -24,6 +24,9 @@ export default async function handler(
   }
 
   if (isVerificationDelivery(payload)) {
+    console.info("Notion webhook verification token received. Set NOTION_WEBHOOK_VERIFICATION_TOKEN from this one-time delivery before verifying the subscription.", {
+      verificationToken: payload.verification_token,
+    });
     return new Response(null, { status: 200 });
   }
 

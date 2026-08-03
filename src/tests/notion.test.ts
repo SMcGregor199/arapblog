@@ -1,6 +1,7 @@
 import type { Client, PageObjectResponse } from "@notionhq/client";
 import { describe, expect, it, vi } from "vitest";
 import { NotionArticleSource } from "../lib/content/notion";
+import { NotionNewsletterIssueSource } from "../lib/content/notion-newsletter";
 import { MemoryContentStorage } from "./helpers";
 
 function richText(content: string) {
@@ -102,5 +103,27 @@ describe("Notion article source", () => {
       2,
       expect.objectContaining({ start_cursor: "cursor-2" }),
     );
+  });
+});
+
+describe("Notion newsletter issue source", () => {
+  it("identifies pages from the configured Newsletter Issues data source", async () => {
+    const notion = {
+      databases: {
+        retrieve: vi.fn(async () => ({
+          data_sources: [{ id: "newsletter-source" }],
+        })),
+      },
+    } as unknown as Client;
+    const source = new NotionNewsletterIssueSource(notion, "newsletter-database");
+    const newsletterPage = {
+      parent: { type: "data_source_id", data_source_id: "newsletter-source" },
+    } as unknown as PageObjectResponse;
+    const otherPage = {
+      parent: { type: "data_source_id", data_source_id: "another-source" },
+    } as unknown as PageObjectResponse;
+
+    await expect(source.belongsToDatabase(newsletterPage)).resolves.toBe(true);
+    await expect(source.belongsToDatabase(otherPage)).resolves.toBe(false);
   });
 });

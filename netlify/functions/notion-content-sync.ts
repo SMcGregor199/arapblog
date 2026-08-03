@@ -2,8 +2,10 @@ import type { Config } from "@netlify/functions";
 import { isProductionContext } from "../../src/lib/content/editorial";
 import { ContributorSynchronizer } from "../../src/lib/content/contributor-sync";
 import { NotionContributorSource } from "../../src/lib/content/notion-contributors";
+import { NotionNewsletterIssueSource, kitDraftClientIfConfigured } from "../../src/lib/content/notion-newsletter";
 import { createNotionArticleSource } from "../../src/lib/content/notion";
 import { NotionEditorialGraphSource } from "../../src/lib/content/notion-graph";
+import { NewsletterSynchronizer } from "../../src/lib/content/newsletter";
 import { createBlobContentStorage } from "../../src/lib/content/storage";
 import { parseWebhookEvent } from "../../src/lib/content/sync";
 import { verifyNotionSignature } from "./notion-content-webhook";
@@ -27,11 +29,14 @@ export default async function handler(request: Request): Promise<void> {
     const storage = createBlobContentStorage();
     const notion = createNotionArticleSource(storage);
     const contributors = new NotionContributorSource(notion.notion);
+    const newsletters = new NotionNewsletterIssueSource(notion.notion);
     const graph = new NotionEditorialGraphSource(storage, notion.notion);
     const pageId = event.entity?.type === "page" ? event.entity.id : undefined;
     if (pageId && event.type !== "page.deleted") {
       const page = await notion.retrievePage(pageId);
-      if (await notion.belongsToArticleDatabase(page)) {
+      if (await newsletters.belongsToDatabase(page)) {
+        await new NewsletterSynchronizer(storage, newsletters, kitDraftClientIfConfigured()).process(pageId);
+      } else if (await notion.belongsToArticleDatabase(page)) {
         const status = notion.readSyncStatus(page);
         const humanEdit = !event.authors?.length || event.authors.some((author) => author.type === "person");
         if (status.published && status.syncState === "Published" && humanEdit) {
