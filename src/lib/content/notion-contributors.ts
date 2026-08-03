@@ -12,6 +12,7 @@ export const CONTRIBUTOR_PROPERTIES = {
   slug: "Slug",
   bio: "Bio",
   role: "Role",
+  linksJson: "Links JSON",
   website: "Website",
   bluesky: "Bluesky",
   instagram: "Instagram",
@@ -92,12 +93,7 @@ export class NotionContributorSource {
     if (!SYNC_STATES.includes(syncState as SyncState)) {
       throw new ContentError(`Unsupported Sync State "${syncState}".`, "VALIDATION");
     }
-    const links = [
-      ["Website", url(properties[CONTRIBUTOR_PROPERTIES.website])],
-      ["Bluesky", url(properties[CONTRIBUTOR_PROPERTIES.bluesky])],
-      ["Instagram", url(properties[CONTRIBUTOR_PROPERTIES.instagram])],
-    ].filter((entry): entry is [string, string] => Boolean(entry[1]))
-      .map(([label, linkUrl]) => ({ label, url: linkUrl }));
+    const links = linksFromProperties(properties);
     return {
       notionPageId: page.id,
       displayName,
@@ -227,6 +223,47 @@ function slugify(value: string): string {
   return value.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
     .replace(/['’]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 }
+
+function linksFromProperties(properties: Record<string, unknown>): Contributor["links"] {
+  const serialized = richText(properties[CONTRIBUTOR_PROPERTIES.linksJson]);
+  if (serialized) {
+    let value: unknown;
+    try {
+      value = JSON.parse(serialized);
+    } catch {
+      throw new ContentError("Links JSON must be valid JSON.", "VALIDATION");
+    }
+    if (!Array.isArray(value) || value.some((entry) => {
+      const item = record(entry);
+      return !text(item.label) || !isHttpUrl(text(item.url));
+    })) {
+      throw new ContentError(
+        "Links JSON must be an array of links with a label and an HTTP URL.",
+        "VALIDATION",
+      );
+    }
+    return value.map((entry) => {
+      const item = record(entry);
+      return { label: text(item.label), url: text(item.url) };
+    });
+  }
+  return [
+    ["Website", url(properties[CONTRIBUTOR_PROPERTIES.website])],
+    ["Bluesky", url(properties[CONTRIBUTOR_PROPERTIES.bluesky])],
+    ["Instagram", url(properties[CONTRIBUTOR_PROPERTIES.instagram])],
+  ].filter((entry): entry is [string, string] => Boolean(entry[1]))
+    .map(([label, linkUrl]) => ({ label, url: linkUrl }));
+}
+
+function isHttpUrl(value: string): boolean {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 function richTextProperty(value: string) {
   return { rich_text: value ? [{ type: "text" as const, text: { content: value } }] : [] };
 }
