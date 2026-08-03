@@ -722,9 +722,20 @@
   }
 
   .newsletter-form {
-    display: flex;
+    display: grid;
     gap: 0.6rem;
     margin-top: 1.5rem;
+  }
+
+  .newsletter-name-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
+  }
+
+  .newsletter-email-row {
+    display: flex;
+    gap: 0.6rem;
   }
 
   .newsletter-form input {
@@ -913,7 +924,7 @@
       gap: 2rem;
     }
 
-    .newsletter-form {
+    .newsletter-email-row {
       flex-direction: column;
     }
 

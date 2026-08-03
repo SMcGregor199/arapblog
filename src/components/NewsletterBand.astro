@@ -16,18 +16,40 @@ import { site } from "../data/site";
       {
         site.newsletterFormAction ? (
           <form class="newsletter-form" action={site.newsletterFormAction} method="post">
-            <label class="sr-only" for="newsletter-email">Email address</label>
-            <input
-              id="newsletter-email"
-              name="email_address"
-              type="email"
-              autocomplete="email"
-              placeholder="you@example.com"
-              required
-            />
-            <button class="button button--light" type="submit" data-umami-event="Newsletter signup">
-              Join the list
-            </button>
+            <div class="newsletter-name-fields">
+              <label class="sr-only" for="newsletter-first-name">First name</label>
+              <input
+                id="newsletter-first-name"
+                name="fields[first_name]"
+                type="text"
+                autocomplete="given-name"
+                placeholder="First name"
+                required
+              />
+              <label class="sr-only" for="newsletter-last-name">Last name</label>
+              <input
+                id="newsletter-last-name"
+                name="fields[last_name]"
+                type="text"
+                autocomplete="family-name"
+                placeholder="Last name"
+                required
+              />
+            </div>
+            <div class="newsletter-email-row">
+              <label class="sr-only" for="newsletter-email">Email address</label>
+              <input
+                id="newsletter-email"
+                name="email_address"
+                type="email"
+                autocomplete="email"
+                placeholder="you@example.com"
+                required
+              />
+              <button class="button button--light" type="submit" data-umami-event="Newsletter signup">
+                Join the list
+              </button>
+            </div>
           </form>
         ) : (
           <a class="button button--light" href="/newsletter">See what is coming</a>
