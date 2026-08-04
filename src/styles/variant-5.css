@@ -133,20 +133,20 @@ body[data-design="5"] .hero-statement {
 body[data-design="5"] .hero-statement .eyebrow { grid-column: 1 / -1; }
 
 body[data-design="5"] .hero-statement h1 {
-  grid-column: 1 / 10;
+  grid-column: 1 / 9;
   max-width: 8ch;
   color: var(--ink);
-  font-size: clamp(5rem, 13vw, 12rem);
+  font-size: clamp(4.5rem, 10vw, 10rem);
   font-weight: 500;
-  line-height: 0.78;
+  line-height: 0.84;
 }
 
 body[data-design="5"] .hero-statement > p:last-child {
-  grid-column: 10 / -1;
-  max-width: 28ch;
-  padding-bottom: 0.6rem;
+  grid-column: 9 / -1;
+  max-width: 25ch;
+  padding: 0 0 0.75rem 1rem;
   color: var(--ink-soft);
-  font-size: 1.05rem;
+  font-size: 1rem;
 }
 
 body[data-design="5"] .lead-story {
@@ -377,7 +377,23 @@ body[data-design="5"] .page-hero h1 {
   color: var(--ink);
   font-size: clamp(5rem, 12vw, 11rem);
   font-weight: 500;
-  line-height: 0.82;
+  line-height: 0.9;
+}
+
+body[data-design="5"] .page-hero--empty {
+  min-height: clamp(28rem, 48vh, 38rem);
+}
+
+body[data-design="5"] .page-hero--newsletter {
+  min-height: clamp(32rem, 56vh, 42rem);
+}
+
+body[data-design="5"] .page-hero--newsletter h1 {
+  font-size: clamp(4.25rem, 9vw, 8.5rem);
+}
+
+body[data-design="5"] .content-section--empty {
+  padding-block: clamp(2.5rem, 5vw, 4rem);
 }
 
 body[data-design="5"] .archive-reading-layout {
@@ -470,6 +486,22 @@ body[data-design="5"] .site-footer {
   body[data-design="5"] .reading-item { grid-template-columns: 2.5rem minmax(0, 1fr); }
   body[data-design="5"] .reading-item:nth-child(even) { margin-left: 0; }
   body[data-design="5"] .collection-signal { min-height: 320px; }
-  body[data-design="5"] .page-hero { min-height: 58vh; }
+  body[data-design="5"] .page-hero {
+    min-height: auto;
+    padding-block: clamp(3.5rem, 12vw, 5.5rem);
+  }
+
+  body[data-design="5"] .page-hero h1,
+  body[data-design="5"] .article-intro h1 {
+    max-width: 100%;
+    font-size: clamp(2.5rem, 10.8vw, 4.5rem);
+    line-height: 0.94;
+  }
+
+  body[data-design="5"] .page-hero--empty {
+    min-height: clamp(24rem, 48vh, 31rem);
+  }
+
+  body[data-design="5"] .page-hero--newsletter { min-height: auto; }
   body[data-design="5"] .article-hero { min-height: auto; }
 }
