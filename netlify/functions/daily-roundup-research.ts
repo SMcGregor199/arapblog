@@ -6,7 +6,7 @@ import {
   NotionExternalPieceRepository,
   OpenAiRoundupResearchSource,
   RoundupResearchCollector,
-  sendRoundupResearchNotification,
+  sendNotionRoundupResearchNotification,
   verifyExternalPieceUrl,
 } from "../../src/lib/content/roundup-research";
 import { createBlobContentStorage } from "../../src/lib/content/storage";
@@ -25,26 +25,21 @@ export default async function handler(): Promise<void> {
   const apiKey = required("OPENAI_API_KEY");
   const notionKey = required("NOTION_API_KEY");
   const databaseId = required("NOTION_CURATED_PIECES_DATABASE_ID");
+  const notion = new Client({ auth: notionKey, notionVersion: "2025-09-03" });
   const collector = new RoundupResearchCollector(
     createBlobContentStorage(),
     new OpenAiRoundupResearchSource(apiKey, serverEnvironment("ROUNDUP_RESEARCH_MODEL") ?? "gpt-5.6-terra"),
-    new NotionExternalPieceRepository(new Client({ auth: notionKey, notionVersion: "2025-09-03" }), databaseId),
+    new NotionExternalPieceRepository(notion, databaseId),
     { verify: verifyExternalPieceUrl },
   );
   const result = await collector.run();
   console.info("Roundup research completed", { date: result.date, imported: result.imported.length, skipped: result.skipped.length });
 
-  const resendKey = serverEnvironment("RESEND_API_KEY");
   if (!result.notificationPending) return;
-  if (!resendKey) {
-    console.info("Roundup research email notification is disabled because RESEND_API_KEY is not configured.");
-    return;
-  }
-  await sendRoundupResearchNotification({
-    apiKey: resendKey,
-    from: required("RESEND_FROM_EMAIL"),
-    to: serverEnvironment("ROUNDUP_RESEARCH_NOTIFICATION_EMAIL") ?? "vestige@arapblog.com",
+  await sendNotionRoundupResearchNotification(notion, {
     result,
+    userId: serverEnvironment("NOTION_RESEARCH_NOTIFICATION_USER_ID"),
+    name: "Shayne",
   });
   await collector.markNotificationSent(result.date);
 }

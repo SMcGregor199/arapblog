@@ -1,9 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
+import type { Client } from "@notionhq/client";
 import {
   RoundupResearchCollector,
   newYorkDate,
   parseRoundupResearchResult,
-  sendRoundupResearchNotification,
+  sendNotionRoundupResearchNotification,
   verifyExternalPieceUrl,
   type ExternalPieceRepository,
   type RoundupResearchCandidate,
@@ -31,7 +32,7 @@ class Pieces implements ExternalPieceRepository {
   async create(value: RoundupResearchCandidate, input: { id: string; canonicalUrl: string }) {
     this.urls.push(input.canonicalUrl);
     this.created.push({ id: input.id, title: value.title, canonicalUrl: input.canonicalUrl });
-    return { ...this.created.at(-1)!, notionUrl: `https://www.notion.so/${input.id}` };
+    return { ...this.created.at(-1)!, notionPageId: input.id, notionUrl: `https://www.notion.so/${input.id}` };
   }
 }
 
@@ -92,15 +93,37 @@ describe("roundup research", () => {
     await expect(verifyExternalPieceUrl("https://example.com/start", redirected)).resolves.toBe("https://example.com/story");
   });
 
-  it("sends a review email containing only the imported Notion records", async () => {
-    const request = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) => new Response(JSON.stringify({ id: "email" }), { status: 200 }));
-    await sendRoundupResearchNotification({
-      apiKey: "resend-key", from: "A Rap Blog <updates@arapblog.com>", to: "vestige@arapblog.com",
-      result: { date: "2026-08-05", skipped: [], notificationPending: true, imported: [{ id: "auto", title: "A < Piece", canonicalUrl: "https://example.com/piece", notionUrl: "https://www.notion.so/auto" }] },
-    }, request as unknown as typeof fetch);
-    const payload = JSON.parse(String((request.mock.calls[0]?.[1] as RequestInit | undefined)?.body));
-    expect(payload.to).toEqual(["vestige@arapblog.com"]);
-    expect(payload.html).toContain("A &lt; Piece");
+  it("mentions Shayne once on the first imported Notion record", async () => {
+    const users = {
+      list: vi.fn(async () => ({
+        results: [{ id: "shayne-id", type: "person", name: "Shayne McGregor", person: { email: "shayne@arapblog.com" } }],
+        has_more: false,
+        next_cursor: null,
+      })),
+    };
+    let sentComment: { parent: { type: string; page_id: string }; markdown: string } | undefined;
+    const comments = { create: vi.fn(async (input: { parent: { type: string; page_id: string }; markdown: string }) => {
+      sentComment = input;
+      return { id: "comment" };
+    }) };
+    const notion = { users, comments } as unknown as Client;
+    await sendNotionRoundupResearchNotification(notion, {
+      name: "Shayne",
+      result: {
+        date: "2026-08-05", skipped: [], notificationPending: true,
+        imported: [
+          { id: "auto-1", title: "A [ Piece", canonicalUrl: "https://example.com/piece-1", notionPageId: "page-1", notionUrl: "https://www.notion.so/page-1" },
+          { id: "auto-2", title: "Another Piece", canonicalUrl: "https://example.com/piece-2", notionPageId: "page-2", notionUrl: "https://www.notion.so/page-2" },
+        ],
+      },
+    });
+    expect(users.list).toHaveBeenCalledOnce();
+    expect(comments.create).toHaveBeenCalledWith(expect.objectContaining({
+      parent: { type: "page_id", page_id: "page-1" },
+      markdown: expect.stringContaining('<mention-user url="shayne-id">Shayne</mention-user>'),
+    }));
+    expect(sentComment?.markdown).toContain("[A \\[ Piece](https://www.notion.so/page-1)");
+    expect(sentComment?.markdown).toContain("[Another Piece](https://www.notion.so/page-2)");
   });
 
   it("uses New York calendar dates across the daylight-saving boundary", () => {

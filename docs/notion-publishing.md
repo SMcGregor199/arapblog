@@ -34,6 +34,8 @@ Properties: `Name` (title), `ID` (rich text slug), `Canonical URL` (URL), `Write
 
 The daily research collector may create private rows with an `auto-YYYYMMDD-…` ID and a neutral AI-generated factual summary in `Annotation`. These rows are research drafts only: the editor must review and, where needed, edit the annotation before creating a Publication Contents selection. The collector never creates selections, publications, or public content.
 
+After a non-empty batch, the collector adds one Notion comment to the first imported row and @mentions **Shayne** with links to the batch. The A Rap Blog connection needs **Read user information** and **Insert comments** enabled. Set `NOTION_RESEARCH_NOTIFICATION_USER_ID` only if the connection cannot resolve Shayne from the Notion display name.
+
 ### A Rap Blog Publication Contents
 
 Properties: `Name` (title), `Appears In` (relation to Publications), `Display Order` (number), `External Piece` (relation), and `Internal Publication` (relation). Exactly one target relation is required.

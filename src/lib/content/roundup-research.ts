@@ -33,6 +33,7 @@ export interface ImportedExternalPiece {
   id: string;
   title: string;
   canonicalUrl: string;
+  notionPageId: string;
   notionUrl: string;
 }
 
@@ -165,29 +166,17 @@ export class OpenAiRoundupResearchSource implements RoundupResearchSource {
   }
 }
 
-export async function sendRoundupResearchNotification(
-  input: { apiKey: string; from: string; to: string; result: RoundupResearchResult },
-  request = fetch,
+export async function sendNotionRoundupResearchNotification(
+  notion: Client,
+  input: { result: RoundupResearchResult; userId?: string; name?: string },
 ): Promise<void> {
   if (!input.result.imported.length) return;
-  const items = input.result.imported.map((item) => `<li><a href="${escapeHtml(item.notionUrl)}">${escapeHtml(item.title)}</a><br><small>${escapeHtml(item.canonicalUrl)}</small></li>`).join("");
-  const response = await request("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${input.apiKey}`,
-      "Content-Type": "application/json",
-      "User-Agent": "A-Rap-Blog-Roundup-Research/1.0",
-      "Idempotency-Key": `roundup-research-${input.result.date}`,
-    },
-    body: JSON.stringify({
-      from: input.from,
-      to: [input.to],
-      subject: `${input.result.imported.length} new A Rap Blog research ${input.result.imported.length === 1 ? "piece" : "pieces"} ready to review`,
-      text: `A Rap Blog imported ${input.result.imported.length} External Pieces for ${input.result.date}.\n\n${input.result.imported.map((item) => `- ${item.title}\n  Notion: ${item.notionUrl}\n  Source: ${item.canonicalUrl}`).join("\n")}`,
-      html: `<p>A Rap Blog imported <strong>${input.result.imported.length}</strong> External Pieces for <strong>${escapeHtml(input.result.date)}</strong>.</p><p>Review and edit their neutral AI summaries before adding any to a Roundup.</p><ul>${items}</ul>`,
-    }),
+  const userId = input.userId ?? await findNotionUserId(notion, input.name ?? "Shayne");
+  const titleLinks = input.result.imported.map((item) => `[${escapeMarkdown(item.title)}](${item.notionUrl})`).join(" · ");
+  await notion.comments.create({
+    parent: { type: "page_id", page_id: input.result.imported[0].notionPageId },
+    markdown: `<mention-user url="${userId}">${escapeMarkdown(input.name ?? "Shayne")}</mention-user> — ${input.result.imported.length} new External ${input.result.imported.length === 1 ? "Piece is" : "Pieces are"} ready to review for ${input.result.date}. Review and edit the neutral AI summaries before selecting anything for a Roundup: ${titleLinks}`,
   });
-  if (!response.ok) throw new ContentError(`Resend notification failed (${response.status}).`, "UNAVAILABLE");
 }
 
 export class NotionExternalPieceRepository implements ExternalPieceRepository {
@@ -225,6 +214,7 @@ export class NotionExternalPieceRepository implements ExternalPieceRepository {
       id: input.id,
       title: candidate.title,
       canonicalUrl: input.canonicalUrl,
+      notionPageId: page.id,
       notionUrl: page.url ?? `https://www.notion.so/${page.id.replaceAll("-", "")}`,
     };
   }
@@ -337,4 +327,17 @@ function titleProperty(value: string) { return { title: [{ type: "text" as const
 function richTextProperty(value: string) { return { rich_text: value ? [{ type: "text" as const, text: { content: value } }] : [] }; }
 function urlValue(value: unknown): string { const record = object(value); return typeof record.url === "string" ? record.url.trim() : ""; }
 function errorMessage(error: unknown): string { return error instanceof Error ? error.message : "Candidate URL verification failed."; }
-function escapeHtml(value: string): string { return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"); }
+function escapeMarkdown(value: string): string { return value.replace(/([\\\[\]()])/g, "\\$1"); }
+
+async function findNotionUserId(notion: Client, name?: string): Promise<string> {
+  const normalizedName = name?.trim().toLowerCase();
+  let cursor: string | undefined;
+  do {
+    const response = await notion.users.list({ page_size: 100, start_cursor: cursor });
+    const users = response.results.filter((user) => user.type === "person");
+    const match = users.find((user) => normalizedName && (user.name?.toLowerCase() === normalizedName || user.name?.toLowerCase().startsWith(`${normalizedName} `)));
+    if (match) return match.id;
+    cursor = response.has_more ? response.next_cursor ?? undefined : undefined;
+  } while (cursor);
+  throw new ContentError("Could not find the Notion user to mention. Enable Read user information for the A Rap Blog connection and confirm the configured notification user.", "NOT_FOUND");
+}
