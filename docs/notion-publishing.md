@@ -30,7 +30,9 @@ Create filtered views and page templates named **Essays**, **Roundups**, **Colle
 
 ### A Rap Blog External Pieces
 
-Properties: `Name` (title), `ID` (rich text slug), `Canonical URL` (URL), `Writer` (rich text), `Source Publication` (rich text), `Original Date` (date), `Topics` (multi-select), and `Annotation` (rich text). The annotation and selection must be written by the editor. Canonical URLs are unique after host/trailing-slash normalization.
+Properties: `Name` (title), `ID` (rich text slug), `Canonical URL` (URL), `Writer` (rich text), `Source Publication` (rich text), `Original Date` (date), `Topics` (multi-select), and `Annotation` (rich text). Canonical URLs are unique after host/trailing-slash normalization.
+
+The daily research collector may create private rows with an `auto-YYYYMMDD-…` ID and a neutral AI-generated factual summary in `Annotation`. These rows are research drafts only: the editor must review and, where needed, edit the annotation before creating a Publication Contents selection. The collector never creates selections, publications, or public content.
 
 ### A Rap Blog Publication Contents
 
@@ -56,7 +58,7 @@ Create one issue for the previous calendar month in `America/New_York`. `Ready` 
 ## Publish lifecycle
 
 1. Keep every launch record Draft while databases and environment values are configured.
-2. Review two Essays, two Listening Guides, four Roundups, and one Collection. All prose, annotations, and selections must be supplied by the editor.
+2. Review two Essays, two Listening Guides, four Roundups, and one Collection. All publication prose and selections must be supplied by the editor; an imported External Piece’s AI research summary must be reviewed and edited where needed before selection.
 3. Run the production reconciliation endpoint with `{"dryRun":true,"rebuild":true,"validateLaunchInventory":true}`.
 4. Set the complete intended graph to `Queued`. A webhook validates and atomically promotes it.
 5. Edits to live records become `Changes pending`; they do not replace the live version.

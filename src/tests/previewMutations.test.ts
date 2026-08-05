@@ -4,6 +4,7 @@ import notionImage from "../../netlify/functions/notion-image";
 import backgroundSync from "../../netlify/functions/notion-content-sync";
 import newsletterRecovery from "../../netlify/functions/newsletter-recover";
 import newsletterWebhook from "../../netlify/functions/newsletter-webhook";
+import roundupResearch from "../../netlify/functions/daily-roundup-research";
 
 beforeEach(() => {
   process.env.CONTEXT = "deploy-preview";
@@ -65,5 +66,11 @@ describe("preview mutation isolation", () => {
       }),
     );
     expect(response.status).toBe(403);
+  });
+
+  it("stops scheduled roundup research before reading credentials or writing Notion", async () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    await expect(roundupResearch()).resolves.toBeUndefined();
+    expect(error).toHaveBeenCalledWith("Rejected non-production roundup research run");
   });
 });

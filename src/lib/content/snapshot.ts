@@ -6,6 +6,7 @@ import {
   publicationMetadata,
   sortPublications,
 } from "./article";
+import { canonicalUrlKey } from "./canonical-url";
 import { ARTICLE_VERSION_PREFIX, type ContentStorage } from "./storage";
 import {
   ContentError,
@@ -224,7 +225,7 @@ function assertPublicationGraph(publications: Publication[], curatedPieces: Cura
 function inferContributors(publications: Publication[]): Contributor[] {
   return [...new Set(publications.map((item) => item.contributor))].map((slug) => ({ notionPageId: `legacy-contributor-${slug}`, displayName: slug, slug, bio: `${slug} contributes to A Rap Blog.`, role: "Contributor", links: [] }));
 }
-function canonicalKey(value: string): string { const url = new URL(value); url.hash = ""; url.hostname = url.hostname.toLowerCase(); if (url.pathname !== "/") url.pathname = url.pathname.replace(/\/+$/, ""); return url.toString(); }
+const canonicalKey = canonicalUrlKey;
 function assertUnique(values: string[], label: string): void { if (new Set(values).size !== values.length) throw new ContentError(`Editorial snapshot contains a duplicate ${label}.`, "VALIDATION"); }
 function requiredText(value: unknown, label: string): string { if (typeof value !== "string" || !value.trim()) throw new ContentError(`${label} is required.`, "VALIDATION"); return value.trim(); }
 function requiredSlug(value: unknown, label: string): string { const slug = requiredText(value, label); if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) throw new ContentError(`${label} is invalid.`, "VALIDATION"); return slug; }

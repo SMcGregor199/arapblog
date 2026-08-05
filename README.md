@@ -73,6 +73,15 @@ webhook secrets, reconciliation secret, and optional Kit v4 credentials.
 - `NOTION_NEWSLETTER_ISSUES_DATABASE_ID`
 - `NOTION_WEBHOOK_VERIFICATION_TOKEN`
 - `CONTENT_RECONCILE_SECRET`
+- `OPENAI_API_KEY` — production-only key for the optional daily Roundup research collector.
+- `ROUNDUP_RESEARCH_ENABLED` — set to `true` only when the seven-day production pilot is approved.
+- `RESEND_API_KEY` and `RESEND_FROM_EMAIL` — optional; send an import-review notice to `vestige@arapblog.com` after a non-empty successful batch.
+
+The daily research function is scheduled for 8:00 AM America/New_York and only runs from a
+production deploy when `ROUNDUP_RESEARCH_ENABLED=true`. It writes private External Pieces only;
+review its neutral AI summaries before creating Roundup selections. To enable email notices,
+verify `arapblog.com` in Resend, use a sending-only API key, and set `RESEND_FROM_EMAIL` to a
+sender at that domain.
 
 None of these values is exposed to browser code. Local development and every non-production
 Netlify context use the immutable preview dataset and reject content mutation. Production page
