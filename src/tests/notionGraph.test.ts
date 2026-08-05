@@ -24,13 +24,13 @@ function publicationPage(id: string, type: PublicationType, syncState = "Queued"
   } as unknown as PageObjectResponse;
 }
 
-function curatedPage(id: string, roundup: string[] = [], order?: number): PageObjectResponse {
+function curatedPage(id: string, roundup: string[] = [], originalDate = "2026-08-01"): PageObjectResponse {
   return {
     object: "page", id, url: `https://notion.so/${id}`, parent: { type: "data_source_id", data_source_id: "curated" },
     properties: {
       Name: title(`Piece ${id}`), ID: text(`piece-${id}`), "Canonical URL": { type: "url", url: `https://example.com/${id}` }, Writer: text("Writer"),
-      "Source Publication": text("Source"), "Original Date": { type: "date", date: { start: "2026-08-01" } }, Topics: { type: "multi_select", multi_select: [] }, Annotation: text("A factual note."),
-      Roundup: relation(...roundup), "Roundup Order": { type: "number", number: order ?? null },
+      "Source Publication": text("Source"), "Original Date": { type: "date", date: { start: originalDate } }, Topics: { type: "multi_select", multi_select: [] }, Annotation: text("A factual note."),
+      Roundup: relation(...roundup),
     },
   } as unknown as PageObjectResponse;
 }
@@ -63,27 +63,30 @@ describe("Notion editorial graph roundup assignments", () => {
   it("builds a Roundup from direct External Piece assignments while keeping that piece reusable in Collections", async () => {
     const graph = source(
       [publicationPage("roundup", "Roundup"), publicationPage("collection", "Collection")],
-      [curatedPage("piece", ["roundup"], 1)],
-      [contentsPage("collection-content", "collection", "piece", 1)],
+      [curatedPage("z", ["roundup"]), curatedPage("a", ["roundup"]), curatedPage("old", ["roundup"], "2026-07-31")],
+      [contentsPage("collection-content", "collection", "z", 1)],
     );
 
     const { editorial } = await graph.buildGraph();
     const roundup = editorial.publications.find((item) => item.notionPageId === "roundup")!;
     const collection = editorial.publications.find((item) => item.notionPageId === "collection")!;
-    expect(roundup).toMatchObject({ publicationType: "Roundup", selections: [{ notionPageId: "piece", kind: "curatedPiece", reference: "piece-piece" }] });
-    expect(collection).toMatchObject({ publicationType: "Collection", selections: [{ notionPageId: "collection-content", kind: "curatedPiece", reference: "piece-piece" }] });
+    expect(roundup).toMatchObject({ publicationType: "Roundup", selections: [
+      { notionPageId: "old", kind: "curatedPiece", reference: "piece-old" },
+      { notionPageId: "a", kind: "curatedPiece", reference: "piece-a" },
+      { notionPageId: "z", kind: "curatedPiece", reference: "piece-z" },
+    ] });
+    expect(collection).toMatchObject({ publicationType: "Collection", selections: [{ notionPageId: "collection-content", kind: "curatedPiece", reference: "piece-z" }] });
   });
 
   it("rejects invalid direct assignments and legacy Roundup Contents rows", async () => {
-    await expect(source([publicationPage("essay", "Essay")], [curatedPage("piece", ["essay"], 1)], []).buildGraph()).rejects.toThrow("must be assigned to a Roundup");
-    await expect(source([publicationPage("roundup", "Roundup")], [curatedPage("piece", ["roundup", "another-roundup"], 1)], []).buildGraph()).rejects.toThrow("only one Roundup");
-    await expect(source([publicationPage("roundup", "Roundup")], [curatedPage("piece", ["roundup"])], []).buildGraph()).rejects.toThrow("requires a positive Roundup Order");
-    await expect(source([publicationPage("roundup", "Roundup")], [curatedPage("piece", ["roundup"], 1)], [contentsPage("legacy", "roundup", "piece", 1)]).buildGraph()).rejects.toThrow("must use the External Piece Roundup relation");
-    await expect(source([publicationPage("roundup", "Roundup")], [curatedPage("one", ["roundup"], 1), curatedPage("two", ["roundup"], 1)], []).buildGraph()).rejects.toThrow("duplicate Roundup Order");
+    await expect(source([publicationPage("essay", "Essay")], [curatedPage("piece", ["essay"])], []).buildGraph()).rejects.toThrow("must be assigned to a Roundup");
+    await expect(source([publicationPage("roundup", "Roundup")], [curatedPage("piece", ["roundup", "another-roundup"])], []).buildGraph()).rejects.toThrow("only one Roundup");
+    await expect(source([publicationPage("roundup", "Roundup")], [curatedPage("piece", ["roundup"], "")], []).buildGraph()).rejects.toThrow("valid Original Date");
+    await expect(source([publicationPage("roundup", "Roundup")], [curatedPage("piece", ["roundup"])], [contentsPage("legacy", "roundup", "piece", 1)]).buildGraph()).rejects.toThrow("must use the External Piece Roundup relation");
   });
 
   it("marks a directly assigned published Roundup pending when its External Piece changes", async () => {
-    const graph = source([publicationPage("roundup", "Roundup", "Published")], [curatedPage("piece", ["roundup"], 1)], []);
+    const graph = source([publicationPage("roundup", "Roundup", "Published")], [curatedPage("piece", ["roundup"])], []);
     const pending = vi.spyOn(graph.publications, "markChangesPending").mockResolvedValue();
     await graph.markAffectedParentsPending("piece");
     expect(pending).toHaveBeenCalledWith("roundup");

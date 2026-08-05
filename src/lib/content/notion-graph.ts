@@ -6,10 +6,10 @@ import { mutateEditorialSnapshot, readActiveEditorialSnapshot } from "./snapshot
 import type { ContentStorage } from "./storage";
 import { ContentError, type CuratedPiece, type EditorialSnapshot, type Publication, type SelectionReference } from "./types";
 
-const CURATED = { title:"Name", id:"ID", url:"Canonical URL", writer:"Writer", source:"Source Publication", date:"Original Date", topics:"Topics", annotation:"Annotation", roundup:"Roundup", roundupOrder:"Roundup Order" } as const;
+const CURATED = { title:"Name", id:"ID", url:"Canonical URL", writer:"Writer", source:"Source Publication", date:"Original Date", topics:"Topics", annotation:"Annotation", roundup:"Roundup" } as const;
 const SELECTION = { parent:"Appears In", curated:"External Piece", publication:"Internal Publication", order:"Display Order" } as const;
 
-interface SelectionRow { parentPageId:string; order:number; selection:SelectionReference }
+interface SelectionRow { parentPageId:string; order:number; sortTitle?:string; selection:SelectionReference }
 
 export class NotionEditorialGraphSource {
   readonly notion: Client;
@@ -50,7 +50,7 @@ export class NotionEditorialGraphSource {
       if(publication.publicationType==="Roundup"&&contentRows.length){throw new ContentError(`Roundup "${publication.slug}" must use the External Piece Roundup relation, not Publication Contents rows.`,"VALIDATION");}
       if(publication.publicationType!=="Roundup"&&publication.publicationType!=="Collection"&&contentRows.length){throw new ContentError(`Only Roundups and Collections may have Publication Contents rows (found on "${publication.slug}").`,"VALIDATION");}
       const orderedSource=publication.publicationType==="Roundup"?includedRoundupAssignments.get(page.id)??[]:contentRows;
-      const ordered=orderedSource.sort((a,b)=>a.order-b.order).map((item)=>({
+      const ordered=[...orderedSource].sort((a,b)=>a.order-b.order||(a.sortTitle??"").localeCompare(b.sortTitle??"")).map((item)=>({
         ...item.selection,
         reference:item.selection.kind==="curatedPiece"
           ? curatedIdByPage.get(item.selection.reference)??item.selection.reference
@@ -119,11 +119,11 @@ export class NotionEditorialGraphSource {
       if(parents.length!==1)throw new ContentError(`External Piece ${page.id} may be assigned to only one Roundup.`,"VALIDATION");
       const parent=parents[0];
       if(publicationTypeByPage.get(parent)!=="Roundup")throw new ContentError(`External Piece ${page.id} must be assigned to a Roundup publication.`,"VALIDATION");
-      const order=numberValue(page.properties[CURATED.roundupOrder]);
-      if(!Number.isInteger(order)||order<1)throw new ContentError(`External Piece ${page.id} requires a positive Roundup Order.`,"VALIDATION");
-      result.set(parent,[...(result.get(parent)??[]),{parentPageId:parent,order,selection:{notionPageId:page.id,kind:"curatedPiece",reference:page.id}}]);
+      const originalDate=date(page.properties[CURATED.date]);
+      const order=Date.parse(`${originalDate}T00:00:00.000Z`);
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(originalDate)||!Number.isFinite(order))throw new ContentError(`External Piece ${page.id} requires a valid Original Date for Roundup ordering.`,"VALIDATION");
+      result.set(parent,[...(result.get(parent)??[]),{parentPageId:parent,order,sortTitle:title(page.properties[CURATED.title]),selection:{notionPageId:page.id,kind:"curatedPiece",reference:page.id}}]);
     }
-    for(const [parent,items] of result){if(new Set(items.map((item)=>item.order)).size!==items.length)throw new ContentError(`Roundup ${parent} contains a duplicate Roundup Order.`,"VALIDATION");}
     return result;
   }
 

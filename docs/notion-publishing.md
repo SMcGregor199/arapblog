@@ -30,19 +30,19 @@ Create filtered views and page templates named **Essays**, **Roundups**, **Colle
 
 ### A Rap Blog External Pieces
 
-Properties: `Name` (title), `ID` (rich text slug), `Canonical URL` (URL), `Writer` (rich text), `Source Publication` (rich text), `Original Date` (date), `Topics` (multi-select), `Annotation` (rich text), `Roundup` (one relation to Publications), and `Roundup Order` (number). Canonical URLs are unique after host/trailing-slash normalization.
+Properties: `Name` (title), `ID` (rich text slug), `Canonical URL` (URL), `Writer` (rich text), `Source Publication` (rich text), `Original Date` (date), `Topics` (multi-select), `Annotation` (rich text), and `Roundup` (one relation to Publications). Canonical URLs are unique after host/trailing-slash normalization.
 
 The daily research collector may create private rows with an `auto-YYYYMMDD-…` ID and a neutral AI-generated factual summary in `Annotation`. These rows are research drafts only: the editor must review and, where needed, edit the annotation before assigning them to a Roundup or creating a Collection Contents row. The collector never creates assignments, selections, publications, or public content.
 
 After a non-empty batch, the collector adds one Notion comment to the first imported row and @mentions **Shayne** with links to the batch. The A Rap Blog connection needs **Read user information** and **Insert comments** enabled. Set `NOTION_RESEARCH_NOTIFICATION_USER_ID` only if the connection cannot resolve Shayne from the Notion display name.
 
-Use the **Available for Roundups** view to work from the unused queue. Set an External Piece’s `Roundup` relation to exactly one Roundup and give it a positive, unique `Roundup Order`; it then leaves that view. Clearing the relation makes it available again. An External Piece may still be reused in Collections.
+Use the **Available for Roundups** view to work from the unused queue. Set an External Piece’s `Roundup` relation to exactly one Roundup; it then leaves that view. Roundups are automatically ordered by Original Date, oldest first, with title as the alphabetical tie breaker. Clearing the relation makes a piece available again. An External Piece may still be reused in Collections.
 
 ### A Rap Blog Publication Contents
 
 Properties: `Name` (title), `Appears In` (relation to Publications), `Display Order` (number), `External Piece` (relation), and `Internal Publication` (relation). Exactly one target relation is required for Collections.
 
-- Roundups are composed only from External Pieces’ direct `Roundup` assignments and `Roundup Order`; do not create Publication Contents rows for a Roundup.
+- Roundups are composed only from External Pieces’ direct `Roundup` assignments, ordered by Original Date and then title; do not create Publication Contents rows for a Roundup.
 - A Collection may select Essays, Listening Guides, and External Pieces, including pieces already assigned to a Roundup.
 - A Collection may not select a Roundup or Collection.
 - Order values must be positive and unique within the parent.
