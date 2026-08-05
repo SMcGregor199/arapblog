@@ -1,0 +1,6 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+export const prerender = false;
+Astro.response.status=404;
+---
+<BaseLayout title="Page not found"><section class="page-hero"><div class="shell"><p class="eyebrow">404</p><h1>Reading now lives in Roundups.</h1><p><a href="/roundups">Browse Roundups.</a></p></div></section></BaseLayout>

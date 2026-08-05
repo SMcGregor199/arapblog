@@ -1,4 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { rejectNonProductionMutation } from "../../src/lib/content/editorial";
 
 export default async function handler(
   request: Request,
@@ -10,6 +11,10 @@ export default async function handler(
     });
   }
 
+
+  const previewRejection = rejectNonProductionMutation();
+  if (previewRejection) return previewRejection;
+
   const rawBody = await request.text();
   let payload: unknown;
   try {
@@ -19,6 +24,9 @@ export default async function handler(
   }
 
   if (isVerificationDelivery(payload)) {
+    console.info("Notion webhook verification token received. Set NOTION_WEBHOOK_VERIFICATION_TOKEN from this one-time delivery before verifying the subscription.", {
+      verificationToken: payload.verification_token,
+    });
     return new Response(null, { status: 200 });
   }
 

@@ -1,4 +1,5 @@
 import { Client } from "@notionhq/client";
+import { rejectNonProductionMutation } from "../../src/lib/content/editorial";
 import {
   cacheImage,
   readCachedImage,
@@ -15,6 +16,9 @@ export default async function handler(request: Request): Promise<Response> {
       headers: { Allow: "GET, HEAD" },
     });
   }
+
+  const previewRejection = rejectNonProductionMutation();
+  if (previewRejection) return previewRejection;
 
   const imageId = new URL(request.url).searchParams.get("imageId") ?? "";
   if (!/^[A-Za-z0-9_-]{1,180}$/.test(imageId)) {

@@ -1,165 +1,75 @@
-# Notion publishing operations
+# Notion editorial desk
 
-## Isolation
+Notion is the private drafting system. The public site reads only an atomically promoted schema-v3 Netlify Blob snapshot; it never renders a Notion draft directly.
 
-Create a separate internal Notion connection for A Rap Blog. Give it access only to a new
-database named **A Rap Blog Articles**. Do not reuse the personal-site connection or share other
-pages with it.
+## Databases
 
-Configure the following database properties exactly. Property names are part of the integration
-contract.
+Create these five full-page databases and connect the production integration to each one.
 
-| Property | Notion type | Configuration |
+### A Rap Blog Publications
+
+Required properties:
+
+| Property | Type | Notes |
 | --- | --- | --- |
-| `Name` | Title | Required |
-| `Slug` | Text | Leave blank on first publication to generate it from `Name`; immutable afterward |
-| `Description` | Text | Required |
-| `Content Type` | Select | `bridge`, `guide`, `books` |
-| `Tags` | Multi-select | Zero or more public tags |
-| `Hero Label` | Text | Required |
-| `Hero Alt` | Text | Required, descriptive alternative text |
-| `Accent` | Select | `clay`, `lime`, `violet` |
-| `Has Affiliate Links` | Checkbox | Enables the article disclosure when the storefront is configured |
-| `Featured` | Checkbox | Used by the homepage; the newest article is the fallback |
-| `Published` | Checkbox | Managed by the sync service |
-| `Publication Date` | Date | Managed by the sync service and set once |
-| `Sync State` | Select | `Draft`, `Changes pending`, `Queued`, `Published`, `Unpublish queued`, `Failed` |
-| `Sync Error` | Text | Managed by the sync service |
-| `Last Synced At` | Date | Managed by the sync service |
-| `Publish / Update` | Button | Edit `Sync State` to `Queued` |
-| `Unpublish` | Button | Edit `Sync State` to `Unpublish queued` |
+| Name | Title | Required |
+| Publication Type | Select | Exactly `Essay`, `Roundup`, `Collection`, `Listening Guide` |
+| Slug | Rich text | Generated on first publication; immutable afterward |
+| Description | Rich text | Required public dek |
+| Contributor Slug | Rich text | Initially `vestige`; must resolve in Contributors |
+| Topics | Multi-select | Public topic metadata |
+| Hero Label / Hero Alt | Rich text | Both required |
+| Accent | Select | `clay`, `lime`, or `violet` |
+| Hero Image Source / Alt / Credit / Credit URL | URL or rich text | Optional source; alt required when used |
+| Has Affiliate Links / Featured / Published | Checkbox | Metadata flags |
+| Publication Date / Last Synced At | Date | Original date is frozen after first publish |
+| Sync State | Select | `Draft`, `Changes pending`, `Queued`, `Published`, `Unpublish queued`, `Failed` |
+| Sync Error | Rich text | Actionable validation or service error |
 
-Use a database template that initializes `Sync State` to `Draft`, leaves `Published` unchecked,
-and includes a short reminder that raw HTML is not rendered. Standard Notion blocks, nested
-blocks, lists, tables, task lists, and images are supported. Image captions become alt text;
-uncaptioned images receive the generic `Article image` fallback and should be corrected before
-publication.
+Create filtered views and page templates named **Essays**, **Roundups**, **Collections**, and **Listening Guides**. Each view filters its matching Publication Type. Each template preselects its type and Draft state. The Listening Guides template begins with the archive philosophy: provide an opinionated route into an artist, scene, album, or idea; say where to start and what to listen for; leave room for the reader’s own relationship with the music.
 
-## Netlify values
+### A Rap Blog External Pieces
 
-Add these values as private environment variables for Functions and Runtime:
+Properties: `Name` (title), `ID` (rich text slug), `Canonical URL` (URL), `Writer` (rich text), `Source Publication` (rich text), `Original Date` (date), `Topics` (multi-select), and `Annotation` (rich text). Canonical URLs are unique after host/trailing-slash normalization.
 
-- `NOTION_API_KEY`: token for the isolated connection.
-- `NOTION_DATABASE_ID`: ID of **A Rap Blog Articles**. The code resolves its first data source.
-- `NOTION_WEBHOOK_VERIFICATION_TOKEN`: token created while verifying the webhook subscription.
-- `CONTENT_RECONCILE_SECRET`: a long random recovery secret.
+The daily research collector may create private rows with an `auto-YYYYMMDD-…` ID and a neutral AI-generated factual summary in `Annotation`. These rows are research drafts only: the editor must review and, where needed, edit the annotation before creating a Publication Contents selection. The collector never creates selections, publications, or public content.
 
-`PUBLIC_BOOKSHOP_STORE_URL` remains the only public external-service value. Never add `PUBLIC_`
-to a Notion or reconciliation secret.
+After a non-empty batch, the collector adds one Notion comment to the first imported row and @mentions **Shayne** with links to the batch. The A Rap Blog connection needs **Read user information** and **Insert comments** enabled. Set `NOTION_RESEARCH_NOTIFICATION_USER_ID` only if the connection cannot resolve Shayne from the Notion display name.
 
-## Webhook
+### A Rap Blog Publication Contents
 
-Create the subscription against:
+Properties: `Name` (title), `Appears In` (relation to Publications), `Display Order` (number), `External Piece` (relation), and `Internal Publication` (relation). Exactly one target relation is required.
 
-```text
-https://arapblog.com/.netlify/functions/notion-content-webhook
-```
+- A Roundup may select only External Pieces.
+- A Collection may select Essays, Listening Guides, and External Pieces.
+- A Collection may not select a Roundup or Collection.
+- Order values must be positive and unique within the parent.
 
-Subscribe to:
+Editing an External Piece or Publication Contents row moves every affected published parent to `Changes pending`. All affected parents must be `Queued` before a shared dependency can be promoted. The complete valid graph is written as a new immutable Blob object before the manifest pointer changes.
 
-- `page.created`
-- `page.undeleted`
-- `page.content_updated`
-- `page.properties_updated`
-- `page.deleted`
+### A Rap Blog Contributors
 
-The initial Notion verification delivery is acknowledged without changing content. Subsequent
-deliveries must have a valid `X-Notion-Signature` HMAC-SHA256 signature. The public handler
-verifies the raw request before invoking the protected `notion-content-sync` Background
-Function, then responds with `202`.
+Retain the existing contributor model and begin with only `vestige`. Required fields are `Name`, `Slug`, `Role`, `Bio`, `Links JSON`, `Published`, `Sync State`, `Sync Error`, and `Last Synced At`.
 
-During initial production activation only, the verification branch logs the one-time
-`verification_token` to restricted Function logs. Remove that `console.info` and deploy again
-immediately after the subscription is verified. No content event enters that logging branch.
+### A Rap Blog Monthly Newsletter Issues
 
-Events are claimed by event ID. A repeated delivery is ignored after completion. Distinct
-concurrent events use conditional manifest writes and retry against the latest active version.
+Properties: `Name`, unique `Coverage Month` (`YYYY-MM`), `Subject`, `Preview Text`, `Workflow State` (`Draft`, `Ready`, `Processing`, `Sent`, `Failed`), `Generated Content Hash`, `Kit Broadcast ID`, `Fallback Page ID`, and `Error`. Write the editor’s note in the page body.
 
-## Publication behavior
+Create one issue for the previous calendar month in `America/New_York`. `Ready` creates or updates an unscheduled Kit draft; with no Kit API key it creates or updates a `Copy-ready email` child page. It never sends. After the editor sends manually, set `Sent`; the exact generated issue is frozen into the public snapshot.
 
-1. Complete the body and all required properties.
-2. Click **Publish / Update**.
-3. The next properties webhook converts the entire page, validates metadata and its body,
-   calculates reading time at 200 words per minute, caches every image as WebP, writes an
-   immutable content version, and updates the manifest last.
-4. After promotion, the service sets `Published`, `Publication Date`, `Last Synced At`, and
-   `Sync State`.
+## Publish lifecycle
 
-After first publication, `Slug` is immutable. Changing it makes the queued revision fail while
-the old version remains live. Duplicate slugs, unsupported select values, missing required text,
-empty bodies, image failures, or Blob failures behave the same way. `Sync State` becomes `Failed`
-and `Sync Error` explains the failure.
+1. Keep every launch record Draft while databases and environment values are configured.
+2. Review two Essays, two Listening Guides, four Roundups, and one Collection. All publication prose and selections must be supplied by the editor; an imported External Piece’s AI research summary must be reviewed and edited where needed before selection.
+3. Run the production reconciliation endpoint with `{"dryRun":true,"rebuild":true,"validateLaunchInventory":true}`.
+4. Set the complete intended graph to `Queued`. A webhook validates and atomically promotes it.
+5. Edits to live records become `Changes pending`; they do not replace the live version.
+6. Set `Unpublish queued` to remove a publication from the next snapshot.
 
-Ordinary edits to a published page set `Changes pending`; they do not alter the public version.
-Click **Publish / Update** when the revision is approved. Click **Unpublish** to atomically remove
-the article. Deleting a published page removes it by Notion page ID.
+Preview contexts return `403` before reading credentials or mutating Notion/Blobs. The code-backed preview contains no editorial fixtures until an approved launch export is intentionally added.
 
-## Reconciliation and recovery
+One Notion connection receives every editorial event. Give it access to all five databases, then subscribe it to `/.netlify/functions/notion-content-webhook`; that handler routes Newsletter Issue pages internally. During Notion's one-time verification delivery, copy the token from the production function log into `NOTION_WEBHOOK_VERIFICATION_TOKEN`, then verify the subscription in Notion.
 
-The reconciliation endpoint accepts only `POST` with the secret as a bearer token. It defaults
-to a dry run:
+To retry a failed or missed issue event in production, POST `{"pageId":"…"}` to `/.netlify/functions/newsletter-recover` with `Authorization: Bearer $NEWSLETTER_RECOVERY_SECRET`. The same content hash and stored draft/fallback IDs preserve idempotency.
 
-```bash
-curl --fail-with-body \
-  -X POST \
-  -H "Authorization: Bearer $CONTENT_RECONCILE_SECRET" \
-  -H "Content-Type: application/json" \
-  -d '{"dryRun":true,"rebuild":true}' \
-  https://arapblog.com/.netlify/functions/content-reconcile
-```
-
-A dry run queries and converts candidate pages but writes neither Notion nor Blobs. Review the
-returned actions and normalized public metadata. To replace the active snapshot after review:
-
-```bash
-curl --fail-with-body \
-  -X POST \
-  -H "Authorization: Bearer $CONTENT_RECONCILE_SECRET" \
-  -H "Content-Type: application/json" \
-  -d '{"dryRun":false,"rebuild":true}' \
-  https://arapblog.com/.netlify/functions/content-reconcile
-```
-
-Use `{"dryRun":false,"rebuild":false}` to recover only queued publish/unpublish actions after a
-missed webhook. A full dry-run rebuild also validates `Draft` pages so an initial migration can
-be reviewed before anything is queued. A live full rebuild includes only `Published` and `Queued`
-pages, excludes unpublish-queued pages, and removes live page IDs no longer returned by the
-database.
-
-## Activation checklist
-
-1. Deploy the pipeline while `site.prelaunch` remains `true`.
-2. Create the isolated connection and database, then add the private Netlify values.
-3. Configure and verify the webhook.
-4. Copy the three migration Markdown articles into Notion with matching metadata.
-5. Run a full reconciliation dry run and compare its normalized output with the current site.
-6. Queue all three pages and verify article HTML with JavaScript disabled, metadata, images, the
-   homepage, `/articles`, `/rss.xml`, `/sitemap.xml`, and `articles-json`.
-7. Remove the three migration Markdown files only after the live snapshot is verified.
-8. Test a revision and an unpublish/republish cycle.
-9. Remove prelaunch crawler protection in a separate reviewed change.
-
-Keep Netlify auto-recharge disabled unless intentionally approved, and review Function and web
-request usage after the first month.
-
-## Dependency audit exception
-
-As of July 30, 2026, `npm audit --omit=dev` reports 16 high-severity advisories through the
-`@astrojs/netlify` adapter's transitive packaging and image dependencies. The reported paths run
-through `@netlify/zip-it-and-ship-it` (`brace-expansion` and `minimatch`) and `@netlify/images`
-(`ipx` and its nested `sharp`). The project's direct `sharp` dependency is already `0.35.3`.
-
-npm currently proposes resolving these advisories by forcing `@astrojs/netlify` from 8.x down to
-6.4.1, which is a breaking downgrade. Do not run `npm audit fix --force`; retain this as an
-upstream adapter exception and reassess when Netlify publishes a compatible dependency update.
-
-## Public and storage endpoints
-
-- `GET /.netlify/functions/articles-json` returns the active public article array, supports
-  `ETag` and `If-None-Match`, and never refreshes Notion.
-- `GET /.netlify/functions/notion-image?imageId=…` serves stable, cached WebP images with
-  immutable caching and a last-known-good fallback.
-- `content/articles/manifest.json` in the `content` Blob store identifies the active version.
-- `content/articles/versions/<sha256>.json` contains immutable full article records.
-- Source URL registrations live under `content/articles/image-sources/`; image bytes live in the
-  separate `images` store.
+The legacy Articles database has been retired. The manifest still promotes immutable version objects, but the active editorial system uses only the five databases above.

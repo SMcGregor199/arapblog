@@ -1,0 +1,7 @@
+---
+import PublicationArchive from "../../components/PublicationArchive.astro";
+import { getEditorialSnapshot, publicationsOfType } from "../../lib/content/editorial";
+export const prerender = false;
+const editorial = await getEditorialSnapshot();
+---
+<PublicationArchive type="Collection" eyebrow="Thematic sequences" title="Ideas in conversation." intro="Collections introduce a theme and sequence A Rap Blog Essays, Listening Guides, and carefully credited outside pieces." publications={publicationsOfType(editorial, "Collection")} />

@@ -42,6 +42,6 @@ describe("article normalization", () => {
         articleFixture(),
         articleFixture({ notionPageId: "page-2" }),
       ]),
-    ).toThrow(/already used/);
+    ).toThrow(/duplicate publication slug/);
   });
 });

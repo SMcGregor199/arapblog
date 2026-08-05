@@ -1,56 +1,9 @@
 ---
-import { getLiveEntry } from "astro:content";
-import ArticleBody from "../../components/ArticleBody";
-import ArticleLayout from "../../layouts/ArticleLayout.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import { isLiveEntryNotFoundError } from "../../lib/content/repository";
-
 export const prerender = false;
-
-const slug = Astro.params.slug ?? "";
-const result = await getLiveEntry("articles", { slug });
-const article = result.entry?.data;
-const unavailable =
-  Boolean(result.error) && !isLiveEntryNotFoundError(result.error);
-
-if (unavailable) {
-  Astro.response.status = 503;
-} else if (!article) {
-  Astro.response.status = 404;
-}
-Astro.response.headers.set(
-  "Netlify-CDN-Cache-Control",
-  "public, s-maxage=30, stale-while-revalidate=120, durable",
-);
+const retired = new Set(["nas-reference-point","no-homework-kendrick-lamar-guide","rap-books-that-improve-listening"]);
+const gone = retired.has(Astro.params.slug ?? "");
+Astro.response.status = gone ? 410 : 404;
+Astro.response.headers.set("Cache-Control", "public, max-age=300");
 ---
-
-{
-  unavailable ? (
-    <BaseLayout
-      title="Content temporarily unavailable"
-      description="This listening path is temporarily unavailable."
-    >
-      <section class="page-hero">
-        <div class="shell">
-          <p class="eyebrow">Temporary interruption</p>
-          <h1>That path is unavailable right now.</h1>
-          <p>Please try again shortly. The last published version has not been replaced.</p>
-        </div>
-      </section>
-    </BaseLayout>
-  ) : article ? (
-    <ArticleLayout article={article}>
-      <ArticleBody bodyMarkdown={article.bodyMarkdown} />
-    </ArticleLayout>
-  ) : (
-    <BaseLayout title="Path not found" description="That listening path does not exist.">
-      <section class="page-hero">
-        <div class="shell">
-          <p class="eyebrow">404</p>
-          <h1>That path does not exist.</h1>
-          <p><a href="/articles">Browse every listening path.</a></p>
-        </div>
-      </section>
-    </BaseLayout>
-  )
-}
+<BaseLayout title={gone ? "Publication retired" : "Page not found"} description={gone ? "This publication has been permanently removed." : "That publication does not exist."}><section class="page-hero"><div class="shell"><p class="eyebrow">{gone ? "410" : "404"}</p><h1>{gone ? "This publication has been retired." : "That publication does not exist."}</h1><p><a href="/">Return to A Rap Blog.</a></p></div></section></BaseLayout>

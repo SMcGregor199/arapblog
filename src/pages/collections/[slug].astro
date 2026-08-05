@@ -1,0 +1,20 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import ArticleBody from "../../components/ArticleBody";
+import PublicationCard from "../../components/PublicationCard.astro";
+import CuratedLinkCard from "../../components/CuratedLinkCard.astro";
+import SupportCard from "../../components/SupportCard.astro";
+import { publicationPage } from "../../lib/content/publication-page";
+import { site } from "../../data/site";
+export const prerender = false;
+const { editorial, publication } = await publicationPage(Astro.params.slug ?? "", "Collection");
+if (!publication) Astro.response.status = 404;
+const resolved = publication?.publicationType === "Collection" ? publication.selections.map((selection) => selection.kind === "publication" ? editorial.publications.find((item)=>item.slug===selection.reference) : editorial.curatedPieces.find((item)=>item.id===selection.reference)).filter(Boolean) : [];
+const jsonLd=publication?{"@context":"https://schema.org","@type":"CollectionPage",name:publication.title,description:publication.description,url:`${site.url}/collections/${publication.slug}`,hasPart:resolved.map((item,index)=>({"@type":"CreativeWork",position:index+1,name:item?.title,url:item&&"canonicalUrl" in item?item.canonicalUrl:`${site.url}/${item?.publicationType === "Essay" ? "essays" : "listening-guides"}/${item?.slug}`}))}:undefined;
+---
+{publication?.publicationType === "Collection" ? <BaseLayout title={publication.title} description={publication.description} type="article" publishedAt={new Date(publication.publishedAt)} updatedAt={new Date(publication.updatedAt)}>
+  <script is:inline slot="head" type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  <header class="page-hero"><div class="shell"><p class="eyebrow">Collection · {publication.selections.length} selections</p><h1>{publication.title}</h1><p>{publication.description}</p></div></header>
+  <section class="content-section"><div class="shell collection-page-layout"><div class="collection-introduction"><p class="kicker">Why these pieces</p><ArticleBody bodyMarkdown={publication.bodyMarkdown} /></div><div>{resolved.map((item,index)=>item && ("canonicalUrl" in item ? <CuratedLinkCard item={item} index={index} /> : <div class="collection-original"><span class="selection-number">{String(index+1).padStart(2,"0")}</span><PublicationCard publication={item} /></div>))}<SupportCard /></div></div></section>
+</BaseLayout> : <BaseLayout title="Collection not found"><section class="page-hero"><div class="shell"><p class="eyebrow">404</p><h1>Collection not found.</h1><p><a href="/collections">Browse Collections.</a></p></div></section></BaseLayout>}
+<style>.collection-page-layout{display:grid;grid-template-columns:minmax(220px,.55fr) minmax(0,1.45fr);gap:clamp(3rem,8vw,8rem)}.collection-introduction{align-self:start;padding-top:1rem;border-top:4px solid var(--clay)}.collection-original{display:grid;grid-template-columns:3rem 1fr;gap:1rem;padding-block:1.5rem;border-top:1px solid var(--line-strong)}.selection-number{font-family:var(--mono);font-size:.72rem}@media(max-width:760px){.collection-page-layout,.collection-original{grid-template-columns:1fr}}</style>

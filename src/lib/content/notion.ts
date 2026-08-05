@@ -9,8 +9,8 @@ import { serverEnvironment } from "./environment";
 import {
   calculateReadingTime,
   isArticleAccent,
-  isContentType,
-  normalizeArticle,
+  normalizePublicationType,
+  normalizePublication,
   slugifyTitle,
 } from "./article";
 import {
@@ -25,9 +25,9 @@ import type { ContentStorage } from "./storage";
 import {
   ContentError,
   SYNC_STATES,
-  type Article,
+  type Publication,
   type ArticleAccent,
-  type ContentType,
+  type PublicationType,
   type SyncState,
 } from "./types";
 
@@ -35,13 +35,18 @@ export const NOTION_PROPERTIES = {
   title: "Name",
   slug: "Slug",
   description: "Description",
-  contentType: "Content Type",
-  tags: "Tags",
+  publicationType: "Publication Type",
+  contributor: "Contributor Slug",
+  topics: "Topics",
   heroLabel: "Hero Label",
   heroAlt: "Hero Alt",
   accent: "Accent",
   hasAffiliateLinks: "Has Affiliate Links",
   featured: "Featured",
+  heroImageSource: "Hero Image Source",
+  heroImageAlt: "Hero Image Alt",
+  heroImageCredit: "Hero Image Credit",
+  heroImageCreditUrl: "Hero Image Credit URL",
   published: "Published",
   publicationDate: "Publication Date",
   syncState: "Sync State",
@@ -54,13 +59,18 @@ export interface NotionArticleMetadata {
   title: string;
   slug: string;
   description: string;
-  contentType: ContentType;
-  tags: string[];
+  publicationType: PublicationType;
+  contributor: string;
+  topics: string[];
   heroLabel: string;
   heroAlt: string;
   accent: ArticleAccent;
   hasAffiliateLinks: boolean;
   featured: boolean;
+  heroImageSource: string;
+  heroImageAlt: string;
+  heroImageCredit: string;
+  heroImageCreditUrl: string;
   published: boolean;
   publicationDate: string;
   syncState: SyncState;
@@ -99,8 +109,7 @@ export class NotionArticleSource {
         notionVersion: "2025-09-03",
       });
     this.storage = options.storage;
-    this.databaseId =
-      options.databaseId ?? requiredEnvironment("NOTION_DATABASE_ID");
+    this.databaseId = options.databaseId ?? requiredEnvironment("NOTION_PUBLICATIONS_DATABASE_ID");
     this.now = options.now ?? (() => new Date());
     this.prewarmImages = options.prewarmImages ?? true;
     this.persistImages = options.persistImages ?? true;
@@ -145,7 +154,7 @@ export class NotionArticleSource {
   parseMetadata(page: PageObjectResponse): NotionArticleMetadata {
     const properties = page.properties;
     const title = titleValue(properties[NOTION_PROPERTIES.title]);
-    const contentTypeValue = selectValue(properties[NOTION_PROPERTIES.contentType]);
+    const publicationTypeValue = selectValue(properties[NOTION_PROPERTIES.publicationType]);
     const accentValue = selectValue(properties[NOTION_PROPERTIES.accent]);
     const syncStateValue =
       selectValue(properties[NOTION_PROPERTIES.syncState]) || "Draft";
@@ -153,12 +162,7 @@ export class NotionArticleSource {
     if (!title) {
       throw new ContentError("Name is required.", "VALIDATION");
     }
-    if (!isContentType(contentTypeValue)) {
-      throw new ContentError(
-        `Content Type must be one of: bridge, guide, books.`,
-        "VALIDATION",
-      );
-    }
+    const publicationType = normalizePublicationType(publicationTypeValue);
     if (!isArticleAccent(accentValue)) {
       throw new ContentError(
         `Accent must be one of: clay, lime, violet.`,
@@ -187,8 +191,10 @@ export class NotionArticleSource {
       title,
       slug: richTextValue(properties[NOTION_PROPERTIES.slug]),
       description,
-      contentType: contentTypeValue,
-      tags: multiSelectValue(properties[NOTION_PROPERTIES.tags]),
+      publicationType,
+      contributor:
+        richTextValue(properties[NOTION_PROPERTIES.contributor]) || "vestige",
+      topics: multiSelectValue(properties[NOTION_PROPERTIES.topics]),
       heroLabel,
       heroAlt,
       accent: accentValue,
@@ -196,6 +202,12 @@ export class NotionArticleSource {
         properties[NOTION_PROPERTIES.hasAffiliateLinks],
       ),
       featured: checkboxValue(properties[NOTION_PROPERTIES.featured]),
+      heroImageSource: urlValue(properties[NOTION_PROPERTIES.heroImageSource]),
+      heroImageAlt: richTextValue(properties[NOTION_PROPERTIES.heroImageAlt]),
+      heroImageCredit: richTextValue(properties[NOTION_PROPERTIES.heroImageCredit]),
+      heroImageCreditUrl: urlValue(
+        properties[NOTION_PROPERTIES.heroImageCreditUrl],
+      ),
       published: checkboxValue(properties[NOTION_PROPERTIES.published]),
       publicationDate: dateValue(properties[NOTION_PROPERTIES.publicationDate]),
       syncState: syncStateValue as SyncState,
@@ -219,7 +231,7 @@ export class NotionArticleSource {
   async articleFromPage(
     page: PageObjectResponse,
     options: { stableSlug?: string; publishedAt?: string } = {},
-  ): Promise<Article> {
+  ): Promise<Publication> {
     const metadata = this.parseMetadata(page);
     const requestedSlug = metadata.slug || slugifyTitle(metadata.title);
     const slug = options.stableSlug || requestedSlug;
@@ -240,27 +252,44 @@ export class NotionArticleSource {
       metadata.publicationDate ||
       this.now().toISOString();
 
-    return normalizeArticle({
+    return normalizePublication({
       notionPageId: page.id,
       slug,
       title: metadata.title,
       description: metadata.description,
       publishedAt,
       updatedAt: this.now().toISOString(),
-      author: "vestige",
-      contentType: metadata.contentType,
-      tags: metadata.tags,
+      contributor: metadata.contributor,
+      publicationType: metadata.publicationType,
+      topics: metadata.topics,
       heroLabel: metadata.heroLabel,
       heroAlt: metadata.heroAlt,
       accent: metadata.accent,
       hasAffiliateLinks: metadata.hasAffiliateLinks,
       featured: metadata.featured,
+      ...(metadata.heroImageSource
+        ? {
+            heroImage: {
+              src: metadata.heroImageSource,
+              alt: metadata.heroImageAlt,
+              ...(metadata.heroImageCredit
+                ? { credit: metadata.heroImageCredit }
+                : {}),
+              ...(metadata.heroImageCreditUrl
+                ? { creditUrl: metadata.heroImageCreditUrl }
+                : {}),
+            },
+          }
+        : {}),
       ...readingTime,
+      ...((metadata.publicationType === "Roundup" || metadata.publicationType === "Collection")
+        ? { selections: [] }
+        : {}),
       bodyMarkdown,
-    });
+    } as Publication);
   }
 
-  async previewArticles(includeDrafts = true): Promise<Article[]> {
+  async previewArticles(includeDrafts = true): Promise<Publication[]> {
     const pages = await this.queryPages();
     const selected = includeDrafts
       ? pages
@@ -282,7 +311,7 @@ export class NotionArticleSource {
     });
   }
 
-  async markPublished(article: Article): Promise<void> {
+  async markPublished(article: Publication): Promise<void> {
     await this.updateProperties(article.notionPageId, {
       [NOTION_PROPERTIES.slug]: richTextProperty(article.slug),
       [NOTION_PROPERTIES.published]: { checkbox: true },
@@ -427,6 +456,10 @@ function checkboxValue(value: unknown): boolean {
 
 function dateValue(value: unknown): string {
   return stringValue(propertyRecord(propertyRecord(value).date).start);
+}
+
+function urlValue(value: unknown): string {
+  return stringValue(propertyRecord(value).url);
 }
 
 function stringValue(value: unknown): string {

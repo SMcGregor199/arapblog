@@ -1,0 +1,14 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import PublicationCard from "./PublicationCard.astro";
+import type { Publication, PublicationType } from "../lib/content/types";
+interface Props { title: string; eyebrow: string; intro: string; type: PublicationType; publications: Publication[] }
+const { title, eyebrow, intro, type, publications } = Astro.props;
+const plural = type === "Essay" ? "Essays" : type === "Roundup" ? "Roundups" : type === "Collection" ? "Collections" : "Listening Guides";
+---
+<BaseLayout title={type} description={intro}>
+  <header class:list={[["page-hero", true], ["page-hero--empty", publications.length === 0]]}><div class="shell"><p class="eyebrow">{eyebrow}</p><h1>{title}</h1><p>{intro}</p></div></header>
+  <section class:list={[["content-section", true], ["content-section--empty", publications.length === 0]]}><div class="shell">
+    {publications.length ? <div class="card-grid">{publications.map((publication) => <PublicationCard publication={publication} />)}</div> : <p class="status-note">No {plural} are published yet.</p>}
+  </div></section>
+</BaseLayout>

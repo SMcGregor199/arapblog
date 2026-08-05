@@ -11,19 +11,33 @@ import { site } from "../data/site";
           <span>{site.name}</span>
         </a>
         <p class="footer-note">
-          Listening paths for rap fans who missed a few exits and are ready to find their way back.
+          Essays, Roundups, Collections, and Listening Guides. Built for attention, not churn.
         </p>
       </div>
-      <nav class="footer-links" aria-label="Footer navigation">
-        <a href="/articles">Articles</a>
-        <a href="/about">About</a>
-        <a href="/newsletter">Newsletter</a>
-        <a href="/affiliate-disclosure">Affiliate disclosure</a>
-        <a href="/privacy">Privacy</a>
-      </nav>
+      <div class="footer-navigation">
+        <nav class="footer-link-group" aria-label="Publications">
+          <p>Browse</p>
+          <div>
+            <a href="/essays">Essays</a>
+            <a href="/roundups">Roundups</a>
+            <a href="/collections">Collections</a>
+            <a href="/listening-guides">Listening Guides</a>
+          </div>
+        </nav>
+        <nav class="footer-link-group" aria-label="Site information">
+          <p>Information</p>
+          <div>
+            <a href="/about">About</a>
+            <a href="/newsletter">Newsletter</a>
+            <a href="/affiliate-disclosure">Affiliate disclosure</a>
+            <a href="/privacy">Privacy</a>
+            <a href="/rss.xml">RSS</a>
+          </div>
+        </nav>
+      </div>
     </div>
     <p class="copyright">
-      © {new Date().getFullYear()} {site.name}. Recommendations are editorially independent.
+      © {new Date().getFullYear()} {site.name}. Selection and criticism remain editorially independent.
     </p>
   </div>
 </footer>

@@ -1,12 +1,17 @@
 import { createHmac } from "node:crypto";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import webhookHandler, {
   verifyNotionSignature,
 } from "../../netlify/functions/notion-content-webhook";
 
+beforeEach(() => {
+  process.env.CONTEXT = "production";
+});
+
 afterEach(() => {
   vi.unstubAllGlobals();
   delete process.env.NOTION_WEBHOOK_VERIFICATION_TOKEN;
+  delete process.env.CONTEXT;
 });
 
 describe("Notion webhook signatures", () => {
@@ -57,7 +62,7 @@ describe("Notion webhook signatures", () => {
     );
   });
 
-  it("acknowledges the one-time verification delivery without queueing or logging", async () => {
+  it("acknowledges the one-time verification delivery, logs its token, and does not queue", async () => {
     const fetchMock = vi.fn();
     const infoMock = vi.spyOn(console, "info").mockImplementation(() => undefined);
     vi.stubGlobal("fetch", fetchMock);
@@ -73,7 +78,10 @@ describe("Notion webhook signatures", () => {
 
     expect(response.status).toBe(200);
     expect(fetchMock).not.toHaveBeenCalled();
-    expect(infoMock).not.toHaveBeenCalled();
+    expect(infoMock).toHaveBeenCalledWith(
+      expect.stringContaining("verification token received"),
+      { verificationToken: "one-time-token" },
+    );
     infoMock.mockRestore();
   });
 
@@ -105,5 +113,16 @@ describe("Notion webhook signatures", () => {
     expect(response.status).toBe(202);
     expect(infoMock).not.toHaveBeenCalled();
     infoMock.mockRestore();
+  });
+
+  it("rejects every webhook delivery outside production", async () => {
+    process.env.CONTEXT = "deploy-preview";
+    const response = await webhookHandler(
+      new Request(
+        "https://deploy-preview-1--arapblog.netlify.app/.netlify/functions/notion-content-webhook",
+        { method: "POST", body: JSON.stringify({ verification_token: "token" }) },
+      ),
+    );
+    expect(response.status).toBe(403);
   });
 });

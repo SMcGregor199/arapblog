@@ -1,0 +1,9 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PublicationLayout from "../../layouts/PublicationLayout.astro";
+import { publicationPage } from "../../lib/content/publication-page";
+export const prerender = false;
+const { publication } = await publicationPage(Astro.params.slug ?? "", "Essay");
+if (!publication) Astro.response.status = 404;
+---
+{publication?.publicationType === "Essay" ? <PublicationLayout publication={publication} /> : <BaseLayout title="Essay not found"><section class="page-hero"><div class="shell"><p class="eyebrow">404</p><h1>Essay not found.</h1><p><a href="/essays">Browse Essays.</a></p></div></section></BaseLayout>}

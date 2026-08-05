@@ -1,8 +1,9 @@
 # A Rap Blog
 
-An Astro publication for returning rap fans who want a clear path back into active listening.
-The fixed site shell is prerendered; article-dependent routes are rendered on demand from an
-atomic Netlify Blob snapshot.
+An Astro publication built around Essays, Roundups, Collections, and Listening Guides. Editorial
+routes are rendered on demand from an atomic version-three
+Netlify Blob snapshot. Deploy Previews use a code-backed snapshot and cannot mutate Notion or
+Blobs.
 
 ## Local development
 
@@ -20,16 +21,12 @@ Run the production checks with:
 npm run build
 ```
 
-## Prelaunch protection
+## Crawler protection
 
-The site is intentionally in prelaunch mode. `site.prelaunch` in `src/data/site.ts` is set to
-`true`, which adds `noindex`, `nofollow`, and `noarchive` directives to every HTML page and
-blocks all crawlers in `robots.txt`.
+`site.prelaunch` in `src/data/site.ts` controls site-wide crawler protection. It is currently
+disabled. Re-enable it only for an intentionally private staging publication.
 
-When the articles are ready and the site should be discoverable, set `site.prelaunch` to
-`false`, rebuild, and confirm that `dist/robots.txt` allows crawling before deploying.
-
-## Publishing an article
+## Publishing
 
 Notion is the canonical editorial source. A signed Notion webhook promotes only revisions whose
 `Sync State` is `Queued`; ordinary edits to a published page become `Changes pending` and leave
@@ -45,8 +42,13 @@ Publishing, updating, and unpublishing do not trigger a Netlify deployment. See
 [`docs/notion-publishing.md`](docs/notion-publishing.md) for the database template, connection,
 webhook, reconciliation, activation, and recovery procedures.
 
-The three files in `src/content/articles/` are retained only as migration source until their
-Notion versions have passed the activation checklist. Runtime routes no longer read them.
+The version-three snapshot contains `publications`, `curatedPieces`, `contributors`, and sent
+`newsletterIssues`. `articles-json` is a deprecated compatibility view containing Essays and
+Listening Guides; `publications-json` exposes all four publication types; `editorial-json` returns
+the complete snapshot. All support ETags. External Pieces never become standalone RSS items.
+
+The Deploy Preview snapshot intentionally contains no editorial fixtures. Launch content is added
+only through a reviewed, human-authored export or the production Notion graph.
 
 ## Brand configuration
 
@@ -57,18 +59,33 @@ The site name, pen name, contact email, support URL, and primary description liv
 
 Copy `.env.example` to `.env` for local testing. Configure the public value in Netlify:
 
-- `PUBLIC_BOOKSHOP_STORE_URL` — the approved Bookshop.org affiliate storefront URL.
+- `PUBLIC_KIT_TIP_URL` — the verified `Support A Rap Blog` Kit Tip page.
+- `PUBLIC_BOOKSHOP_STORE_URL` — an optional approved Bookshop.org affiliate storefront URL.
 
-Configure the four server-only content values in Netlify:
+Configure the server-only values listed in `.env.example`, including the five Notion database IDs,
+webhook secrets, reconciliation secret, and optional Kit v4 credentials.
 
 - `NOTION_API_KEY`
-- `NOTION_DATABASE_ID`
+- `NOTION_PUBLICATIONS_DATABASE_ID`
+- `NOTION_CURATED_PIECES_DATABASE_ID`
+- `NOTION_SELECTIONS_DATABASE_ID`
+- `NOTION_CONTRIBUTORS_DATABASE_ID`
+- `NOTION_NEWSLETTER_ISSUES_DATABASE_ID`
 - `NOTION_WEBHOOK_VERIFICATION_TOKEN`
 - `CONTENT_RECONCILE_SECRET`
+- `OPENAI_API_KEY` — production-only key for the optional daily Roundup research collector.
+- `ROUNDUP_RESEARCH_ENABLED` — set to `true` only when the seven-day production pilot is approved.
+- `NOTION_RESEARCH_NOTIFICATION_USER_ID` — optional explicit Notion user ID for the @shayne batch-review notification.
 
-None of these values is exposed to browser code. Local development reads Notion directly when
-the Notion API key and database ID are present and can include drafts. Production page loads
-never query Notion; they read the active Blob snapshot.
+The daily research function is scheduled for 8:00 AM America/New_York and only runs from a
+production deploy when `ROUNDUP_RESEARCH_ENABLED=true`. It writes private External Pieces only;
+review its neutral AI summaries before creating Roundup selections. To enable the notification,
+ensure the A Rap Blog Notion connection has **Read user information** and **Insert comments** enabled.
+It will mention @shayne once on the first imported External Piece, with links to the entire batch.
+
+None of these values is exposed to browser code. Local development and every non-production
+Netlify context use the immutable preview dataset and reject content mutation. Production page
+loads never query Notion; they read the active Blob snapshot.
 
 Umami Cloud analytics is configured directly in `src/layouts/BaseLayout.astro`. Its website ID is
 public configuration, and tracking is restricted to the production domains.

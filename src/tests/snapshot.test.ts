@@ -35,7 +35,7 @@ describe("content snapshots", () => {
       code: "UNAVAILABLE",
     });
     await expect(readActiveSnapshot(storage, { allowMissing: true })).resolves.toEqual(
-      { manifest: null, articles: [] },
+      { manifest: null, publications: [], articles: [] },
     );
   });
 });

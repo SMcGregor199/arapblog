@@ -37,4 +37,13 @@ describe("server-rendered article Markdown", () => {
       "https://example.com",
     );
   });
+
+  it("labels contextual Bookshop affiliate clicks when the publication is disclosed", () => {
+    const html = renderToStaticMarkup(createElement(ArticleBody, {
+      bodyMarkdown: "[Read the book](https://bookshop.org/a/example/123)",
+      hasAffiliateLinks: true,
+    }));
+    expect(html).toContain('rel="external nofollow sponsored"');
+    expect(html).toContain('data-umami-event="Bookshop affiliate click"');
+  });
 });

@@ -1,0 +1,18 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import ArticleBody from "../../components/ArticleBody";
+import CuratedLinkCard from "../../components/CuratedLinkCard.astro";
+import { publicationPage } from "../../lib/content/publication-page";
+import { site } from "../../data/site";
+export const prerender = false;
+const { editorial, publication } = await publicationPage(Astro.params.slug ?? "", "Roundup");
+if (!publication) Astro.response.status = 404;
+const pieces = publication?.publicationType === "Roundup" ? publication.selections.map((selection) => editorial.curatedPieces.find((piece) => piece.id === selection.reference)).filter(Boolean) : [];
+const jsonLd = publication ? { "@context":"https://schema.org", "@type":"CollectionPage", name:publication.title, description:publication.description, datePublished:publication.publishedAt, url:`${site.url}/roundups/${publication.slug}`, hasPart:pieces.map((piece,index)=>({"@type":"Article",position:index+1,name:piece?.title,url:piece?.canonicalUrl,author:piece?.writer})) } : undefined;
+---
+{publication?.publicationType === "Roundup" ? <BaseLayout title={publication.title} description={publication.description} type="article" publishedAt={new Date(publication.publishedAt)} updatedAt={new Date(publication.updatedAt)}>
+  <script is:inline slot="head" type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  <header class="page-hero"><div class="shell"><p class="eyebrow">Roundup · {new Date(publication.publishedAt).toLocaleDateString("en-US",{dateStyle:"long",timeZone:"UTC"})}</p><h1>{publication.title}</h1><p>{publication.description}</p></div></header>
+  <section class="content-section"><div class="shell archive-reading-layout"><aside><p class="kicker">This week</p><ArticleBody bodyMarkdown={publication.bodyMarkdown} /></aside><div class="reading-list">{pieces.map((piece,index)=>piece && <CuratedLinkCard item={piece} index={index} />)}</div></div></section>
+</BaseLayout> : <BaseLayout title="Roundup not found"><section class="page-hero"><div class="shell"><p class="eyebrow">404</p><h1>Roundup not found.</h1><p><a href="/roundups">Browse Roundups.</a></p></div></section></BaseLayout>}
+<style>.archive-reading-layout{display:grid;grid-template-columns:minmax(220px,.5fr) minmax(0,1.5fr);gap:clamp(2rem,7vw,7rem)}aside{align-self:start;padding-top:1rem;border-top:4px solid var(--clay)}@media(max-width:760px){.archive-reading-layout{grid-template-columns:1fr}}</style>

@@ -4,15 +4,19 @@ export const site = {
   shortName: "ARB",
   url: "https://arapblog.com",
   description:
-    "Opinionated listening paths for rap fans finding their way back in.",
+    "Essays, Roundups, Collections, and Listening Guides for rap listeners who want context, argument, and discovery.",
+  headline: "The writing rap deserves.",
   author: "vestige",
   email: "vestige@arapblog.com",
-  supportUrl: "https://buymeacoffee.com/arapblog",
+  supportUrl: import.meta.env.PUBLIC_KIT_TIP_URL || "https://buymeacoffee.com/arapblog",
   newsletterFormAction: "https://app.kit.com/forms/9741486/subscriptions",
 };
 
 export const navigation = [
-  { href: "/articles", label: "All paths" },
+  { href: "/essays", label: "Essays" },
+  { href: "/roundups", label: "Roundups" },
+  { href: "/collections", label: "Collections" },
+  { href: "/listening-guides", label: "Listening Guides" },
   { href: "/about", label: "About" },
   { href: "/newsletter", label: "Newsletter" },
 ];

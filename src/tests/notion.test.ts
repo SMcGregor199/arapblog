@@ -1,6 +1,7 @@
 import type { Client, PageObjectResponse } from "@notionhq/client";
 import { describe, expect, it, vi } from "vitest";
 import { NotionArticleSource } from "../lib/content/notion";
+import { NotionNewsletterIssueSource } from "../lib/content/notion-newsletter";
 import { MemoryContentStorage } from "./helpers";
 
 function richText(content: string) {
@@ -24,8 +25,8 @@ function pageFixture(id = "page-1"): PageObjectResponse {
       },
       Slug: richText("a-complete-guide"),
       Description: richText("A useful description."),
-      "Content Type": { type: "select", select: { name: "guide" } },
-      Tags: {
+      "Publication Type": { type: "select", select: { name: "Listening Guide" } },
+      Topics: {
         type: "multi_select",
         multi_select: [{ name: "Kendrick" }, { name: "listening path" }],
       },
@@ -58,8 +59,8 @@ describe("Notion article source", () => {
       title: "A Complete Guide",
       slug: "a-complete-guide",
       description: "A useful description.",
-      contentType: "guide",
-      tags: ["Kendrick", "listening path"],
+      publicationType: "Listening Guide",
+      topics: ["Kendrick", "listening path"],
       heroLabel: "The route",
       heroAlt: "An abstract route across a record",
       accent: "lime",
@@ -102,5 +103,27 @@ describe("Notion article source", () => {
       2,
       expect.objectContaining({ start_cursor: "cursor-2" }),
     );
+  });
+});
+
+describe("Notion newsletter issue source", () => {
+  it("identifies pages from the configured Newsletter Issues data source", async () => {
+    const notion = {
+      databases: {
+        retrieve: vi.fn(async () => ({
+          data_sources: [{ id: "newsletter-source" }],
+        })),
+      },
+    } as unknown as Client;
+    const source = new NotionNewsletterIssueSource(notion, "newsletter-database");
+    const newsletterPage = {
+      parent: { type: "data_source_id", data_source_id: "newsletter-source" },
+    } as unknown as PageObjectResponse;
+    const otherPage = {
+      parent: { type: "data_source_id", data_source_id: "another-source" },
+    } as unknown as PageObjectResponse;
+
+    await expect(source.belongsToDatabase(newsletterPage)).resolves.toBe(true);
+    await expect(source.belongsToDatabase(otherPage)).resolves.toBe(false);
   });
 });

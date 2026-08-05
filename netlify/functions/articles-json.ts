@@ -1,18 +1,15 @@
 import { contentCacheHeaders } from "../../src/lib/content/cache";
 import { contentHash } from "../../src/lib/content/article";
-import { readActiveSnapshot } from "../../src/lib/content/snapshot";
-import {
-  createBlobContentStorage,
-  type ContentStorage,
-} from "../../src/lib/content/storage";
+import { getEditorialSnapshot } from "../../src/lib/content/editorial";
+import type { ContentStorage } from "../../src/lib/content/storage";
 
 export default async function handler(request: Request): Promise<Response> {
-  return serveArticlesJson(request, createBlobContentStorage());
+  return serveArticlesJson(request);
 }
 
 export async function serveArticlesJson(
   request: Request,
-  storage: ContentStorage,
+  storage?: ContentStorage,
 ): Promise<Response> {
   if (request.method !== "GET" && request.method !== "HEAD") {
     return new Response("Method not allowed", {
@@ -22,11 +19,15 @@ export async function serveArticlesJson(
   }
 
   try {
-    const { manifest, articles } = await readActiveSnapshot(storage);
-    const etag = `"${contentHash(manifest?.activeVersion ?? "")}"`;
+    const articles = (await getEditorialSnapshot(storage)).publications.filter(
+      (publication) => publication.publicationType === "Essay" || publication.publicationType === "Listening Guide",
+    );
+    const etag = `"${contentHash(articles)}"`;
     const headers = {
       ...contentCacheHeaders(),
       "Content-Type": "application/json; charset=utf-8",
+      Deprecation: "true",
+      Link: '</.netlify/functions/publications-json>; rel="successor-version"',
       ETag: etag,
     };
     const conditionalEtags =

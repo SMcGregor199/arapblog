@@ -1,0 +1,10 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getEditorialSnapshot } from "../../lib/content/editorial";
+export const prerender=false;
+const editorial=await getEditorialSnapshot();
+const issue=editorial.newsletterIssues.find((item)=>item.coverageMonth===Astro.params.month);
+if(!issue) Astro.response.status=404;
+---
+{issue?<BaseLayout title={issue.subject} description={issue.previewText} type="article" publishedAt={new Date(issue.sentAt)} updatedAt={new Date(issue.sentAt)}><header class="page-hero"><div class="shell"><p class="eyebrow">Newsletter · {issue.coverageMonth}</p><h1>{issue.subject}</h1><p>{issue.previewText}</p></div></header><section class="content-section"><div class="shell newsletter-archive" set:html={issue.html}></div></section></BaseLayout>:<BaseLayout title="Newsletter issue not found"><section class="page-hero"><div class="shell"><p class="eyebrow">404</p><h1>Newsletter issue not found.</h1><p><a href="/newsletter">View the archive.</a></p></div></section></BaseLayout>}
+<style>.newsletter-archive{max-width:760px}.newsletter-archive :global(section),.newsletter-archive :global(footer){margin-top:3rem}.newsletter-archive :global(article article){padding-block:1.5rem;border-top:1px solid var(--line)}.newsletter-archive :global(h2){font-size:clamp(2rem,5vw,4rem)}.newsletter-archive :global(h3){margin-top:.5rem;font-size:clamp(1.4rem,3vw,2.2rem)}.newsletter-archive :global(p){margin-top:.7rem}</style>

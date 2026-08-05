@@ -6,7 +6,7 @@ import type {
 import type {
   Article,
   ArticleManifest,
-  ArticleSnapshot,
+  StoredSnapshot,
   ManifestRead,
 } from "../lib/content/types";
 
@@ -23,13 +23,13 @@ export class MemoryContentStorage implements ContentStorage {
     return { manifest: this.manifest, etag: this.manifestEtag };
   }
 
-  async readVersion(key: string): Promise<ArticleSnapshot | null> {
-    return (this.values.get(key) as ArticleSnapshot | undefined) ?? null;
+  async readVersion(key: string): Promise<StoredSnapshot | null> {
+    return (this.values.get(key) as StoredSnapshot | undefined) ?? null;
   }
 
   async writeVersion(
     key: string,
-    value: ArticleSnapshot,
+    value: StoredSnapshot,
     options?: JsonWriteOptions,
   ): Promise<JsonWriteResult> {
     this.writes.push(`version:${key}`);
@@ -95,9 +95,9 @@ export function articleFixture(overrides: Partial<Article> = {}): Article {
     description: "A useful listening path.",
     publishedAt: "2026-07-30T12:00:00.000Z",
     updatedAt: "2026-07-30T12:00:00.000Z",
-    author: "vestige",
-    contentType: "guide",
-    tags: ["rap"],
+    contributor: "vestige",
+    publicationType: "Listening Guide",
+    topics: ["rap"],
     heroLabel: "First path",
     heroAlt: "An abstract record",
     accent: "clay",
@@ -107,5 +107,5 @@ export function articleFixture(overrides: Partial<Article> = {}): Article {
     readTime: "1 min",
     bodyMarkdown: "A complete article body.",
     ...overrides,
-  };
+  } as Article;
 }

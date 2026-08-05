@@ -1,0 +1,9 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PublicationLayout from "../../layouts/PublicationLayout.astro";
+import { publicationPage } from "../../lib/content/publication-page";
+export const prerender = false;
+const { publication } = await publicationPage(Astro.params.slug ?? "", "Listening Guide");
+if (!publication) Astro.response.status = 404;
+---
+{publication?.publicationType === "Listening Guide" ? <PublicationLayout publication={publication} /> : <BaseLayout title="Listening Guide not found"><section class="page-hero"><div class="shell"><p class="eyebrow">404</p><h1>Listening Guide not found.</h1><p><a href="/listening-guides">Browse Listening Guides.</a></p></div></section></BaseLayout>}

@@ -1,11 +1,13 @@
 import { getStore } from "@netlify/blobs";
-import type { ArticleManifest, ArticleSnapshot, ManifestRead } from "./types";
+import type { ArticleManifest, ManifestRead, StoredSnapshot } from "./types";
 
 export const CONTENT_STORE_NAME = "content";
 export const IMAGE_STORE_NAME = "images";
 export const ARTICLE_MANIFEST_KEY = "content/articles/manifest.json";
 export const ARTICLE_VERSION_PREFIX = "content/articles/versions";
+export const NEWSLETTER_EVENT_PREFIX = "content/newsletter";
 export const ARTICLE_EVENT_PREFIX = "content/articles/events";
+export const CONTRIBUTOR_EVENT_PREFIX = "content/contributors/events";
 export const IMAGE_SOURCE_PREFIX = "content/articles/image-sources";
 
 export interface JsonWriteOptions {
@@ -21,10 +23,10 @@ export interface JsonWriteResult {
 
 export interface ContentStorage {
   readManifest(): Promise<ManifestRead>;
-  readVersion(key: string): Promise<ArticleSnapshot | null>;
+  readVersion(key: string): Promise<StoredSnapshot | null>;
   writeVersion(
     key: string,
-    value: ArticleSnapshot,
+    value: StoredSnapshot,
     options?: JsonWriteOptions,
   ): Promise<JsonWriteResult>;
   writeManifest(
@@ -54,7 +56,7 @@ export function createBlobContentStorage(): ContentStorage {
       };
     },
     async readVersion(key) {
-      return (await store.get(key, { type: "json" })) as ArticleSnapshot | null;
+      return (await store.get(key, { type: "json" })) as StoredSnapshot | null;
     },
     async writeVersion(key, value, options) {
       return setJSON(store, key, value, options);
