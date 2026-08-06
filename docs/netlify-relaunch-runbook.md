@@ -5,12 +5,12 @@
 - Keep `main` and the current production deploy untouched while PR #29 is reviewed.
 - Lock the current published deploy before the release.
 - Keep Netlify auto-recharge disabled.
-- Never configure `CONTEXT=production` locally or in a Deploy Preview.
+- Never configure `ARAPBLOG_RUNTIME_CONTEXT=production` locally or in a Deploy Preview.
 - Preview mutation endpoints must return `403` and previews must use the empty code-backed snapshot unless a reviewed human-authored launch export is committed.
 
 ## Production environment
 
-Server-only: `NOTION_API_KEY`, `NOTION_PUBLICATIONS_DATABASE_ID`, `NOTION_CURATED_PIECES_DATABASE_ID`, `NOTION_SELECTIONS_DATABASE_ID`, `NOTION_CONTRIBUTORS_DATABASE_ID`, `NOTION_NEWSLETTER_ISSUES_DATABASE_ID`, `NOTION_WEBHOOK_VERIFICATION_TOKEN`, `CONTENT_RECONCILE_SECRET`, `NEWSLETTER_RECOVERY_SECRET`, optional `KIT_API_KEY`, and optional `KIT_TEMPLATE_ID`.
+Server-only: `ARAPBLOG_RUNTIME_CONTEXT=production`, `NOTION_API_KEY`, `NOTION_PUBLICATIONS_DATABASE_ID`, `NOTION_CURATED_PIECES_DATABASE_ID`, `NOTION_SELECTIONS_DATABASE_ID`, `NOTION_CONTRIBUTORS_DATABASE_ID`, `NOTION_NEWSLETTER_ISSUES_DATABASE_ID`, `NOTION_WEBHOOK_VERIFICATION_TOKEN`, `CONTENT_RECONCILE_SECRET`, `NEWSLETTER_RECOVERY_SECRET`, optional `KIT_API_KEY`, and optional `KIT_TEMPLATE_ID`. Scope `ARAPBLOG_RUNTIME_CONTEXT` to Production Functions only; `CONTEXT` is not available to functions at runtime.
 
 Public: `PUBLIC_KIT_TIP_URL` and optional `PUBLIC_BOOKSHOP_STORE_URL`. Verify the Kit Tip page before setting the Tip URL and removing the Buy Me a Coffee fallback.
 

@@ -7,11 +7,11 @@ import newsletterWebhook from "../../netlify/functions/newsletter-webhook";
 import roundupResearch from "../../netlify/functions/daily-roundup-research";
 
 beforeEach(() => {
-  process.env.CONTEXT = "deploy-preview";
+  process.env.ARAPBLOG_RUNTIME_CONTEXT = "deploy-preview";
 });
 
 afterEach(() => {
-  delete process.env.CONTEXT;
+  delete process.env.ARAPBLOG_RUNTIME_CONTEXT;
   vi.restoreAllMocks();
 });
 

@@ -1,11 +1,12 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { serveEditorialJson } from "../../netlify/functions/editorial-json";
 import { previewEditorialSnapshot } from "../data/preview-editorial";
+import { isProductionContext } from "../lib/content/editorial";
 import { mutateEditorialSnapshot, validateEditorialSnapshot } from "../lib/content/snapshot";
 import type { EditorialSnapshot } from "../lib/content/types";
 import { articleFixture, MemoryContentStorage } from "./helpers";
 
-afterEach(()=>{delete process.env.CONTEXT;});
+afterEach(()=>{delete process.env.ARAPBLOG_RUNTIME_CONTEXT;delete process.env.CONTEXT;});
 
 function graphFixture():EditorialSnapshot{
   const essay=articleFixture({notionPageId:"essay-page",slug:"first-essay",publicationType:"Essay"});
@@ -14,8 +15,9 @@ function graphFixture():EditorialSnapshot{
 }
 
 describe("editorial schema version three",()=>{
+  it("uses an explicit runtime production context instead of Netlify's build-only CONTEXT",()=>{process.env.CONTEXT="production";expect(isProductionContext()).toBe(false);process.env.ARAPBLOG_RUNTIME_CONTEXT="production";expect(isProductionContext()).toBe(true);});
   it("keeps deploy preview editorial content empty until a reviewed export",()=>{const editorial=validateEditorialSnapshot(previewEditorialSnapshot);expect(editorial.schemaVersion).toBe(3);expect(editorial.publications).toEqual([]);expect(editorial.curatedPieces).toEqual([]);expect(editorial.contributors.map((item)=>item.slug)).toEqual(["vestige"]);});
   it("validates Roundup and Collection selection rules",()=>{const editorial=validateEditorialSnapshot(graphFixture());expect(editorial.publications).toHaveLength(4);const invalid=graphFixture();const roundup=invalid.publications.find((item)=>item.publicationType==="Roundup")!;if(roundup.publicationType==="Roundup")roundup.selections[0]={notionPageId:"selection-1",kind:"publication",reference:"first-essay"} as never;expect(()=>validateEditorialSnapshot(invalid)).toThrow("The active content snapshot is invalid.");});
   it("never promotes an invalid graph over the last-known-good manifest",async()=>{const storage=new MemoryContentStorage();await mutateEditorialSnapshot(storage,()=>graphFixture());const live=storage.manifest?.activeVersion;await expect(mutateEditorialSnapshot(storage,(editorial)=>{const collection=editorial.publications.find((item)=>item.publicationType==="Collection")!;if(collection.publicationType==="Collection")collection.selections.push({notionPageId:"selection-x",kind:"publication",reference:"weekly-one"});return editorial;})).rejects.toThrow("The active content snapshot is invalid.");expect(storage.manifest?.activeVersion).toBe(live);});
-  it("serves the empty immutable preview snapshot with ETag and 304 support",async()=>{process.env.CONTEXT="deploy-preview";const response=await serveEditorialJson(new Request("https://preview.example/.netlify/functions/editorial-json"));expect(response.status).toBe(200);const body=await response.json();expect(body).toMatchObject({schemaVersion:3,publications:[],curatedPieces:[]});const conditional=await serveEditorialJson(new Request("https://preview.example/.netlify/functions/editorial-json",{headers:{"If-None-Match":`W/${response.headers.get("etag")}`}}));expect(conditional.status).toBe(304);});
+  it("serves the empty immutable preview snapshot with ETag and 304 support",async()=>{process.env.ARAPBLOG_RUNTIME_CONTEXT="deploy-preview";const response=await serveEditorialJson(new Request("https://preview.example/.netlify/functions/editorial-json"));expect(response.status).toBe(200);const body=await response.json();expect(body).toMatchObject({schemaVersion:3,publications:[],curatedPieces:[]});const conditional=await serveEditorialJson(new Request("https://preview.example/.netlify/functions/editorial-json",{headers:{"If-None-Match":`W/${response.headers.get("etag")}`}}));expect(conditional.status).toBe(304);});
 });

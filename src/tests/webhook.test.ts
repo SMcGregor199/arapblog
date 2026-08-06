@@ -5,13 +5,13 @@ import webhookHandler, {
 } from "../../netlify/functions/notion-content-webhook";
 
 beforeEach(() => {
-  process.env.CONTEXT = "production";
+  process.env.ARAPBLOG_RUNTIME_CONTEXT = "production";
 });
 
 afterEach(() => {
   vi.unstubAllGlobals();
   delete process.env.NOTION_WEBHOOK_VERIFICATION_TOKEN;
-  delete process.env.CONTEXT;
+  delete process.env.ARAPBLOG_RUNTIME_CONTEXT;
 });
 
 describe("Notion webhook signatures", () => {
@@ -116,7 +116,7 @@ describe("Notion webhook signatures", () => {
   });
 
   it("rejects every webhook delivery outside production", async () => {
-    process.env.CONTEXT = "deploy-preview";
+    process.env.ARAPBLOG_RUNTIME_CONTEXT = "deploy-preview";
     const response = await webhookHandler(
       new Request(
         "https://deploy-preview-1--arapblog.netlify.app/.netlify/functions/notion-content-webhook",

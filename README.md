@@ -72,6 +72,7 @@ webhook secrets, reconciliation secret, and optional Kit v4 credentials.
 - `NOTION_CONTRIBUTORS_DATABASE_ID`
 - `NOTION_NEWSLETTER_ISSUES_DATABASE_ID`
 - `NOTION_WEBHOOK_VERIFICATION_TOKEN`
+- `ARAPBLOG_RUNTIME_CONTEXT=production` — required in the Netlify Production Functions environment; this explicitly enables live editorial reads and mutations. Do not set it in local, branch, or Deploy Preview contexts.
 - `CONTENT_RECONCILE_SECRET`
 - `OPENAI_API_KEY` — production-only key for the optional daily Roundup research collector.
 - `ROUNDUP_RESEARCH_ENABLED` — set to `true` only when the seven-day production pilot is approved.
