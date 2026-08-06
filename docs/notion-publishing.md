@@ -68,7 +68,7 @@ Create one issue for the previous calendar month in `America/New_York`. `Ready` 
 5. Edits to live records become `Changes pending`; they do not replace the live version.
 6. Set `Unpublish queued` to remove a publication from the next snapshot.
 
-Preview contexts return `403` before reading credentials or mutating Notion/Blobs. The code-backed preview contains no editorial fixtures until an approved launch export is intentionally added.
+Preview contexts return `403` before reading credentials or mutating Notion/Blobs. Set `ARAPBLOG_RUNTIME_CONTEXT=production` only in Netlify's Production Functions environment; Netlify's build-time `CONTEXT` variable is unavailable during function execution. The code-backed preview contains no editorial fixtures until an approved launch export is intentionally added.
 
 One Notion connection receives every editorial event. Give it access to all five databases, then subscribe it to `/.netlify/functions/notion-content-webhook`; that handler routes Newsletter Issue pages internally. During Notion's one-time verification delivery, copy the token from the production function log into `NOTION_WEBHOOK_VERIFICATION_TOKEN`, then verify the subscription in Notion.
 

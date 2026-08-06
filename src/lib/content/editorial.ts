@@ -5,7 +5,10 @@ import { createBlobContentStorage, type ContentStorage } from "./storage";
 import type { EditorialSnapshot, Publication, PublicationType } from "./types";
 
 export function isProductionContext(): boolean {
-  return serverEnvironment("CONTEXT") === "production";
+  // Netlify's CONTEXT is a build-time variable and is not available to
+  // serverless functions at runtime. Keep this opt-in so deploy previews and
+  // local development can never mutate the live editorial snapshot.
+  return serverEnvironment("ARAPBLOG_RUNTIME_CONTEXT") === "production";
 }
 
 export function previewContentEnabled(): boolean {
