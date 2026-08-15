@@ -156,10 +156,10 @@ export class OpenAiRoundupResearchSource implements RoundupResearchSource {
       }),
     });
     if (!response.ok) throw new ContentError(`OpenAI research request failed (${response.status}).`, "UNAVAILABLE");
-    const payload = await response.json() as { output_text?: unknown };
-    if (typeof payload.output_text !== "string") throw new ContentError("OpenAI research response did not include structured output.", "VALIDATION");
+    const outputText = responseOutputText(await response.json());
+    if (!outputText) throw new ContentError("OpenAI research response did not include structured output.", "VALIDATION");
     try {
-      return JSON.parse(payload.output_text);
+      return JSON.parse(outputText);
     } catch {
       throw new ContentError("OpenAI research response was not valid JSON.", "VALIDATION");
     }
@@ -319,6 +319,18 @@ const researchResponseSchema = {
 function runKey(date: string): string { return `${RUN_PREFIX}/${date}.json`; }
 function resultFrom(record: RunRecord): RoundupResearchResult { return { date: record.date, imported: record.imported, skipped: record.skipped, notificationPending: Boolean(record.imported.length && !record.notificationSentAt) }; }
 function object(value: unknown): Record<string, unknown> { return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {}; }
+function responseOutputText(payload: unknown): string {
+  const output = object(payload).output;
+  if (!Array.isArray(output)) return "";
+  return output.flatMap((item) => {
+    const message = object(item);
+    if (message.type !== "message" || !Array.isArray(message.content)) return [];
+    return message.content.flatMap((part) => {
+      const content = object(part);
+      return content.type === "output_text" && typeof content.text === "string" ? [content.text] : [];
+    });
+  }).join("");
+}
 function optionalText(value: unknown): string { return typeof value === "string" ? value.trim().replace(/\s+/g, " ") : ""; }
 function requiredText(value: unknown, label: string): string { const text = optionalText(value); if (!text || text.length > 1_800) throw new ContentError(`${label} is required and must be at most 1,800 characters.`, "VALIDATION"); return text; }
 function requiredUrl(value: unknown): string { const text = requiredText(value, "Candidate canonical URL"); if (!isSafeExternalHttpUrl(text)) throw new ContentError("Candidate canonical URL must be a safe public HTTP URL.", "VALIDATION"); return canonicalUrlKey(text); }
