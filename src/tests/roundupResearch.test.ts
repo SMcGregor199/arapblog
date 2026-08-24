@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import type { Client } from "@notionhq/client";
 import {
+  OpenAiRoundupResearchSource,
   RoundupResearchCollector,
   newYorkDate,
   parseRoundupResearchResult,
@@ -37,6 +38,29 @@ class Pieces implements ExternalPieceRepository {
 }
 
 describe("roundup research", () => {
+  it("parses structured output from raw Responses API output items", async () => {
+    const expected = { candidates: [candidate(1), candidate(2), candidate(3)] };
+    const request = vi.fn(async () => new Response(JSON.stringify({
+      output: [
+        { type: "web_search_call", id: "ws_1" },
+        { type: "message", content: [{ type: "output_text", text: JSON.stringify(expected) }] },
+      ],
+    }), { status: 200 }));
+
+    await expect(new OpenAiRoundupResearchSource("test-key", "test-model", request).collect({ prompt: "Find pieces" })).resolves.toEqual(expected);
+    expect(request).toHaveBeenCalledWith("https://api.openai.com/v1/responses", expect.objectContaining({ method: "POST" }));
+  });
+
+  it("rejects Responses API output without valid structured JSON", async () => {
+    const missingOutput = new OpenAiRoundupResearchSource("test-key", "test-model", async () => new Response(JSON.stringify({ output: [] }), { status: 200 }));
+    await expect(missingOutput.collect({ prompt: "Find pieces" })).rejects.toThrow("did not include structured output");
+
+    const invalidJson = new OpenAiRoundupResearchSource("test-key", "test-model", async () => new Response(JSON.stringify({
+      output: [{ type: "message", content: [{ type: "output_text", text: "not JSON" }] }],
+    }), { status: 200 }));
+    await expect(invalidJson.collect({ prompt: "Find pieces" })).rejects.toThrow("was not valid JSON");
+  });
+
   it("requires 3–8 complete, unique research candidates", () => {
     const valid = { candidates: [candidate(1), candidate(2), candidate(3)] };
     expect(parseRoundupResearchResult(valid)).toHaveLength(3);
